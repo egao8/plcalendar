@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TrendingUp, TrendingDown, DollarSign, Settings, BarChart3 } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Settings } from 'lucide-react';
 import { DayEntry, UserSettings } from '../types';
 import { calculateCumulativePL, formatCurrency } from '../utils/calculations';
 

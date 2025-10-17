@@ -1,7 +1,5 @@
 import React, { useMemo } from 'react';
 import {
-  LineChart,
-  Line,
   BarChart,
   Bar,
   AreaChart,
@@ -10,7 +8,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   Cell
 } from 'recharts';

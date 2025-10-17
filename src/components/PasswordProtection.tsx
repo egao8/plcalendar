@@ -14,7 +14,7 @@ export const PasswordProtection: React.FC<PasswordProtectionProps> = ({
 }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isSettingPassword, setIsSettingPassword] = useState(!correctPassword);
+  const [isSettingPassword] = useState(!correctPassword);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

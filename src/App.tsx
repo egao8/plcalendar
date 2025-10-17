@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Calendar } from './components/Calendar';
 import { DayEntryModal } from './components/DayEntryModal';
 import { Sidebar } from './components/Sidebar';
