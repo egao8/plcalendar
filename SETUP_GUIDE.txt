@@ -1,0 +1,108 @@
+🚀 P&L CALENDAR - QUICK SETUP GUIDE
+=====================================
+
+Your trading P&L calendar app is ready! Follow these steps to get started.
+
+STEP 1: INSTALL DEPENDENCIES
+----------------------------
+Open your terminal in this directory and run:
+
+    npm install
+
+This will install all required packages (React, Firebase, Recharts, Tailwind, etc.)
+
+
+STEP 2: SET UP FIREBASE
+-----------------------
+You need a Firebase account to store your data permanently.
+
+1. Go to https://console.firebase.google.com/
+2. Click "Add project" or "Create a project"
+3. Name it "plcalendar" (or whatever you like)
+4. Click the Web icon (</>) to register a web app
+5. Copy the firebaseConfig object you receive
+
+6. Open src/firebase.ts and replace the placeholder values with your config:
+   - Replace YOUR_API_KEY with your apiKey
+   - Replace YOUR_AUTH_DOMAIN with your authDomain
+   - Replace YOUR_PROJECT_ID with your projectId
+   - Replace YOUR_STORAGE_BUCKET with your storageBucket
+   - Replace YOUR_MESSAGING_SENDER_ID with your messagingSenderId
+   - Replace YOUR_APP_ID with your appId
+
+7. In Firebase Console, go to Firestore Database
+8. Click "Create database"
+9. Choose "Start in production mode"
+10. Select a location (e.g., us-central)
+
+11. Go to Rules tab and paste this:
+    rules_version = '2';
+    service cloud.firestore {
+      match /databases/{database}/documents {
+        match /{document=**} {
+          allow read, write: if true;
+        }
+      }
+    }
+12. Click Publish
+
+For detailed Firebase instructions, see FIREBASE_SETUP.md
+
+
+STEP 3: RUN THE APP
+-------------------
+In your terminal, run:
+
+    npm run dev
+
+Open http://localhost:5173 in your browser
+
+First time:
+- Set a password (this will be saved in Firebase)
+- Start adding trades to your calendar!
+
+
+STEP 4: DEPLOY TO NETLIFY (Optional)
+-------------------------------------
+When ready to deploy:
+
+1. Push your code to GitHub (don't forget to update src/firebase.ts first!)
+2. Go to https://netlify.com
+3. Click "Add new site" > "Import an existing project"
+4. Connect your GitHub repo
+5. Build command: npm run build
+6. Publish directory: dist
+7. Click Deploy
+
+That's it! Your app will be live.
+
+
+FEATURES YOU CAN USE:
+--------------------
+✅ Click any calendar day to add trades
+✅ Enter P&L, stock symbols, % returns, tags, notes
+✅ Days turn green (profit), red (loss), or yellow (neutral)
+✅ View cumulative P&L in the sidebar
+✅ Set and track your account net worth
+✅ Click "Analytics" to see:
+   - Win rate, Sharpe ratio, profit factor
+   - Cumulative P&L curve
+   - Daily P&L chart
+   - P&L by ticker
+   - P&L by day of week
+   - Trade return distribution
+✅ All data persists forever in Firebase
+
+
+TROUBLESHOOTING:
+---------------
+- If data isn't saving, check Firebase Firestore rules
+- If you see Firebase errors, verify your config in src/firebase.ts
+- Check browser console (F12) for error messages
+- See FIREBASE_SETUP.md for detailed troubleshooting
+
+
+Need help? Check README.md for full documentation.
+
+Happy Trading! 📈
+
