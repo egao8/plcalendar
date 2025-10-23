@@ -381,7 +381,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
               <Tooltip 
                 contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px' }}
                 labelStyle={{ color: '#e2e8f0' }}
-                formatter={(value: number, name: string, props: any) => [
+                formatter={(value: number, _name: string, props: any) => [
                   `${formatCurrency(value)} (${props.payload.count} trades)`,
                   'P&L'
                 ]}
