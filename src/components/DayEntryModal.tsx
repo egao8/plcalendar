@@ -36,6 +36,8 @@ export const DayEntryModal: React.FC<DayEntryModalProps> = ({
   const [notes, setNotes] = useState(existingEntry?.notes || '');
   const [selectedTags, setSelectedTags] = useState<string[]>(existingEntry?.tags || []);
   const [customTag, setCustomTag] = useState('');
+  // Track raw input strings for percentages to allow typing "0.05"
+  const [percentInputs, setPercentInputs] = useState<{[key: number]: string}>({});
 
   const dateStr = format(date, 'yyyy-MM-dd');
 
@@ -52,8 +54,10 @@ export const DayEntryModal: React.FC<DayEntryModalProps> = ({
     if (field === 'symbol') {
       newTrades[index] = { ...newTrades[index], symbol: value as string };
     } else if (field === 'percentReturn') {
-      // Handle percentReturn - parse string to number
-      const numValue = typeof value === 'string' ? (value === '' ? 0 : parseFloat(value)) : value;
+      // Store raw string value for display
+      setPercentInputs(prev => ({ ...prev, [index]: value as string }));
+      // Parse to number for the trade object
+      const numValue = typeof value === 'string' ? (value === '' ? 0 : parseFloat(value) || 0) : value;
       newTrades[index] = { ...newTrades[index], percentReturn: numValue };
     }
     setTrades(newTrades);
@@ -157,7 +161,7 @@ export const DayEntryModal: React.FC<DayEntryModalProps> = ({
                   <input
                     type="number"
                     step="any"
-                    value={trade.percentReturn || ''}
+                    value={percentInputs[index] !== undefined ? percentInputs[index] : (trade.percentReturn || '')}
                     onChange={(e) => updateTrade(index, 'percentReturn', e.target.value)}
                     className="w-32 px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="% Return"
