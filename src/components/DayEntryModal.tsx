@@ -49,14 +49,12 @@ export const DayEntryModal: React.FC<DayEntryModalProps> = ({
 
   const updateTrade = (index: number, field: keyof Trade, value: string | number) => {
     const newTrades = [...trades];
-    if (field === 'percentReturn') {
-      // Keep as number but handle empty string
-      newTrades[index] = { 
-        ...newTrades[index], 
-        [field]: typeof value === 'string' ? (value === '' ? 0 : parseFloat(value)) : value 
-      };
-    } else {
-      newTrades[index] = { ...newTrades[index], [field]: value };
+    if (field === 'symbol') {
+      newTrades[index] = { ...newTrades[index], symbol: value as string };
+    } else if (field === 'percentReturn') {
+      // Handle percentReturn - parse string to number
+      const numValue = typeof value === 'string' ? (value === '' ? 0 : parseFloat(value)) : value;
+      newTrades[index] = { ...newTrades[index], percentReturn: numValue };
     }
     setTrades(newTrades);
   };
