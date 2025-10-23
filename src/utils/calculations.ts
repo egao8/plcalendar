@@ -212,7 +212,16 @@ export const calculateRecoveryFactor = (entries: DayEntry[]): number => {
 
 export const calculateAverageTradesPerDay = (entries: DayEntry[]): number => {
   if (entries.length === 0) return 0;
-  const totalTrades = entries.reduce((sum, e) => sum + e.numberOfTrades, 0);
-  return totalTrades / entries.length;
+  
+  // Only count weekdays (Monday-Friday)
+  const weekdayEntries = entries.filter(entry => {
+    const date = new Date(entry.id);
+    const dayOfWeek = date.getDay();
+    return dayOfWeek >= 1 && dayOfWeek <= 5; // 1 = Monday, 5 = Friday
+  });
+  
+  if (weekdayEntries.length === 0) return 0;
+  const totalTrades = weekdayEntries.reduce((sum, e) => sum + e.numberOfTrades, 0);
+  return totalTrades / weekdayEntries.length;
 };
 

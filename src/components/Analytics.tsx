@@ -214,6 +214,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
           <MetricCard
             title="Avg Trades/Day"
             value={metrics.avgTradesPerDay.toFixed(1)}
+            subtitle="Weekdays only"
             color="text-slate-300"
           />
         </div>
