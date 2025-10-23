@@ -150,9 +150,9 @@ export const DayEntryModal: React.FC<DayEntryModalProps> = ({
                   />
                   <input
                     type="number"
-                    step="0.01"
+                    step="0.001"
                     value={trade.percentReturn || ''}
-                    onChange={(e) => updateTrade(index, 'percentReturn', parseFloat(e.target.value))}
+                    onChange={(e) => updateTrade(index, 'percentReturn', e.target.value === '' ? 0 : parseFloat(e.target.value))}
                     className="w-32 px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="% Return"
                   />

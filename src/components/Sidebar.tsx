@@ -18,23 +18,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onNavigateToAnalytics,
   currentView
 }) => {
-  const [isEditingNetWorth, setIsEditingNetWorth] = useState(false);
-  const [netWorthInput, setNetWorthInput] = useState(settings.netWorth.toString());
+  const [isEditingPL, setIsEditingPL] = useState(false);
+  const [plAdjustment, setPlAdjustment] = useState('0');
 
-  const cumulativePL = calculateCumulativePL(entries);
-  const currentNetWorth = settings.netWorth;
+  const calculatedPL = calculateCumulativePL(entries);
+  const manualAdjustment = settings.startingBalance || 0;
+  const cumulativePL = calculatedPL + manualAdjustment;
 
-  const handleSaveNetWorth = () => {
-    const newNetWorth = parseFloat(netWorthInput);
-    if (!isNaN(newNetWorth)) {
-      onUpdateSettings({ ...settings, netWorth: newNetWorth });
+  const handleSavePLAdjustment = () => {
+    const adjustment = parseFloat(plAdjustment);
+    if (!isNaN(adjustment)) {
+      onUpdateSettings({ ...settings, startingBalance: adjustment });
     }
-    setIsEditingNetWorth(false);
+    setIsEditingPL(false);
   };
-
-  const plPercentage = settings.startingBalance > 0 
-    ? (cumulativePL / settings.startingBalance) * 100 
-    : 0;
 
   return (
     <div className="bg-slate-800 rounded-2xl shadow-xl border border-slate-700 p-6 space-y-6">
@@ -62,41 +59,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </button>
       </div>
 
-      {/* Account Net Worth */}
-      <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl p-5 border border-blue-500/20">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-medium text-slate-400">Account Net Worth</h3>
-          <button
-            onClick={() => setIsEditingNetWorth(!isEditingNetWorth)}
-            className="text-slate-400 hover:text-white transition-colors"
-          >
-            <Settings className="w-4 h-4" />
-          </button>
-        </div>
-        
-        {isEditingNetWorth ? (
-          <div className="flex gap-2">
-            <input
-              type="number"
-              value={netWorthInput}
-              onChange={(e) => setNetWorthInput(e.target.value)}
-              className="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
-              autoFocus
-            />
-            <button
-              onClick={handleSaveNetWorth}
-              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
-            >
-              Save
-            </button>
-          </div>
-        ) : (
-          <div className="text-3xl font-bold text-white">
-            {formatCurrency(currentNetWorth)}
-          </div>
-        )}
-      </div>
-
       {/* Cumulative P&L */}
       <div className={`rounded-xl p-5 border ${
         cumulativePL > 0
@@ -105,36 +67,72 @@ export const Sidebar: React.FC<SidebarProps> = ({
           ? 'bg-red-500/10 border-red-500/30'
           : 'bg-slate-700 border-slate-600'
       }`}>
-        <div className="flex items-center gap-2 mb-2">
-          {cumulativePL > 0 ? (
-            <TrendingUp className="w-5 h-5 text-green-400" />
-          ) : cumulativePL < 0 ? (
-            <TrendingDown className="w-5 h-5 text-red-400" />
-          ) : (
-            <DollarSign className="w-5 h-5 text-slate-400" />
-          )}
-          <h3 className="text-sm font-medium text-slate-400">Cumulative P&L</h3>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            {cumulativePL > 0 ? (
+              <TrendingUp className="w-5 h-5 text-green-400" />
+            ) : cumulativePL < 0 ? (
+              <TrendingDown className="w-5 h-5 text-red-400" />
+            ) : (
+              <DollarSign className="w-5 h-5 text-slate-400" />
+            )}
+            <h3 className="text-sm font-medium text-slate-400">Cumulative P&L</h3>
+          </div>
+          <button
+            onClick={() => {
+              setIsEditingPL(!isEditingPL);
+              if (!isEditingPL) setPlAdjustment(manualAdjustment.toString());
+            }}
+            className="text-slate-400 hover:text-white transition-colors"
+            title="Adjust cumulative P&L"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
         </div>
         
-        <div className={`text-3xl font-bold ${
-          cumulativePL > 0
-            ? 'text-green-400'
-            : cumulativePL < 0
-            ? 'text-red-400'
-            : 'text-slate-300'
-        }`}>
-          {formatCurrency(cumulativePL)}
-        </div>
+        {isEditingPL ? (
+          <div className="space-y-2">
+            <div className="text-sm text-slate-400">
+              Calculated: {formatCurrency(calculatedPL)}
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                step="0.01"
+                value={plAdjustment}
+                onChange={(e) => setPlAdjustment(e.target.value)}
+                className="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-lg font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Manual adjustment"
+                autoFocus
+              />
+              <button
+                onClick={handleSavePLAdjustment}
+                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
+              >
+                Save
+              </button>
+            </div>
+            <div className="text-xs text-slate-500">
+              Add/subtract from calculated P&L
+            </div>
+          </div>
+        ) : (
+          <div className={`text-3xl font-bold ${
+            cumulativePL > 0
+              ? 'text-green-400'
+              : cumulativePL < 0
+              ? 'text-red-400'
+              : 'text-slate-300'
+          }`}>
+            {formatCurrency(cumulativePL)}
+          </div>
+        )}
         
-        <div className={`text-sm font-medium mt-1 ${
-          plPercentage > 0
-            ? 'text-green-400'
-            : plPercentage < 0
-            ? 'text-red-400'
-            : 'text-slate-400'
-        }`}>
-          {plPercentage > 0 ? '+' : ''}{plPercentage.toFixed(2)}% from start
-        </div>
+        {manualAdjustment !== 0 && !isEditingPL && (
+          <div className="text-xs text-slate-500 mt-1">
+            (incl. {formatCurrency(manualAdjustment)} adjustment)
+          </div>
+        )}
       </div>
 
       {/* Quick Stats */}

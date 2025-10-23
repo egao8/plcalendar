@@ -18,9 +18,16 @@ import {
   calculateMaxDrawdown,
   calculateProfitFactor,
   calculateSharpeRatio,
+  calculateExpectancy,
+  calculateAvgWinLossRatio,
+  getLargestWinLoss,
+  getWinLossStreaks,
   getPLByTicker,
   getPLByDayOfWeek,
+  getPLByTag,
   getReturnDistribution,
+  calculateRecoveryFactor,
+  calculateAverageTradesPerDay,
   formatCurrency,
   formatPercent
 } from '../utils/calculations';
@@ -57,13 +64,26 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
   );
 
   // Core metrics
-  const metrics = useMemo(() => ({
-    winRate: calculateWinRate(entries),
-    avgReturn: calculateAverageReturn(entries),
-    maxDrawdown: calculateMaxDrawdown(entries),
-    profitFactor: calculateProfitFactor(entries),
-    sharpeRatio: calculateSharpeRatio(entries)
-  }), [entries]);
+  const metrics = useMemo(() => {
+    const winLoss = getLargestWinLoss(entries);
+    const streaks = getWinLossStreaks(entries);
+    return {
+      winRate: calculateWinRate(entries),
+      avgReturn: calculateAverageReturn(entries),
+      maxDrawdown: calculateMaxDrawdown(entries),
+      profitFactor: calculateProfitFactor(entries),
+      sharpeRatio: calculateSharpeRatio(entries),
+      expectancy: calculateExpectancy(entries),
+      avgWinLossRatio: calculateAvgWinLossRatio(entries),
+      largestWin: winLoss.largestWin,
+      largestLoss: winLoss.largestLoss,
+      currentStreak: streaks.currentStreak,
+      longestWinStreak: streaks.longestWinStreak,
+      longestLossStreak: streaks.longestLossStreak,
+      recoveryFactor: calculateRecoveryFactor(entries),
+      avgTradesPerDay: calculateAverageTradesPerDay(entries)
+    };
+  }, [entries]);
 
   // P&L by ticker
   const plByTicker = useMemo(() => 
@@ -73,6 +93,9 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
 
   // P&L by day of week
   const plByDay = useMemo(() => getPLByDayOfWeek(entries), [entries]);
+
+  // P&L by tag/strategy
+  const plByTag = useMemo(() => getPLByTag(entries), [entries]);
 
   // Return distribution (histogram)
   const returnDistribution = useMemo(() => {
@@ -117,7 +140,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
       {/* Core Performance Metrics */}
       <div className="bg-slate-800 rounded-2xl shadow-xl border border-slate-700 p-6">
         <h2 className="text-2xl font-bold text-white mb-6">Core Performance Metrics</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           <MetricCard
             title="Win Rate"
             value={formatPercent(metrics.winRate)}
@@ -129,21 +152,69 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
             color={metrics.avgReturn >= 0 ? 'text-green-400' : 'text-red-400'}
           />
           <MetricCard
-            title="Max Drawdown"
-            value={formatPercent(metrics.maxDrawdown)}
-            color="text-red-400"
+            title="Expectancy"
+            value={formatCurrency(metrics.expectancy)}
+            subtitle="Expected value per trade"
+            color={metrics.expectancy >= 0 ? 'text-green-400' : 'text-red-400'}
+          />
+          <MetricCard
+            title="Avg Win/Loss Ratio"
+            value={metrics.avgWinLossRatio === Infinity ? '∞' : metrics.avgWinLossRatio.toFixed(2)}
+            subtitle="Average win ÷ average loss"
+            color="text-blue-400"
           />
           <MetricCard
             title="Profit Factor"
             value={metrics.profitFactor === Infinity ? '∞' : metrics.profitFactor.toFixed(2)}
-            subtitle="Total Profit / Total Loss"
+            subtitle="Total profit ÷ total loss"
             color="text-blue-400"
           />
           <MetricCard
             title="Sharpe Ratio"
             value={metrics.sharpeRatio.toFixed(2)}
-            subtitle="Risk-Adjusted Return"
+            subtitle="Risk-adjusted return"
             color="text-purple-400"
+          />
+          <MetricCard
+            title="Max Drawdown"
+            value={formatPercent(metrics.maxDrawdown)}
+            color="text-red-400"
+          />
+          <MetricCard
+            title="Recovery Factor"
+            value={metrics.recoveryFactor === Infinity ? '∞' : metrics.recoveryFactor.toFixed(2)}
+            subtitle="Net profit ÷ max drawdown"
+            color="text-cyan-400"
+          />
+          <MetricCard
+            title="Largest Win"
+            value={formatCurrency(metrics.largestWin)}
+            color="text-green-400"
+          />
+          <MetricCard
+            title="Largest Loss"
+            value={formatCurrency(metrics.largestLoss)}
+            color="text-red-400"
+          />
+          <MetricCard
+            title="Longest Win Streak"
+            value={`${metrics.longestWinStreak} days`}
+            color="text-green-400"
+          />
+          <MetricCard
+            title="Longest Loss Streak"
+            value={`${metrics.longestLossStreak} days`}
+            color="text-red-400"
+          />
+          <MetricCard
+            title="Current Streak"
+            value={`${Math.abs(metrics.currentStreak)} ${metrics.currentStreak >= 0 ? 'wins' : 'losses'}`}
+            color={metrics.currentStreak >= 0 ? 'text-green-400' : 'text-red-400'}
+          />
+          <MetricCard
+            title="Avg Trades/Day"
+            value={metrics.avgTradesPerDay.toFixed(1)}
+            color="text-slate-300"
           />
         </div>
       </div>
@@ -286,6 +357,47 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
           </BarChart>
         </ResponsiveContainer>
       </div>
+
+      {/* P&L by Tag/Strategy */}
+      {plByTag.length > 0 && (
+        <div className="bg-slate-800 rounded-2xl shadow-xl border border-slate-700 p-6">
+          <h2 className="text-2xl font-bold text-white mb-6">P&L by Strategy/Tag</h2>
+          <ResponsiveContainer width="100%" height={Math.max(300, plByTag.length * 50)}>
+            <BarChart data={plByTag} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+              <XAxis 
+                type="number"
+                stroke="#9ca3af"
+                tick={{ fill: '#9ca3af' }}
+                tickFormatter={(value) => formatCurrency(value)}
+              />
+              <YAxis 
+                type="category"
+                dataKey="tag" 
+                stroke="#9ca3af"
+                tick={{ fill: '#9ca3af' }}
+                width={150}
+              />
+              <Tooltip 
+                contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px' }}
+                labelStyle={{ color: '#e2e8f0' }}
+                formatter={(value: number, name: string, props: any) => [
+                  `${formatCurrency(value)} (${props.payload.count} trades)`,
+                  'P&L'
+                ]}
+              />
+              <Bar dataKey="pl">
+                {plByTag.map((entry, index) => (
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={entry.pl > 0 ? '#10b981' : '#ef4444'} 
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
       {/* Return Distribution */}
       <div className="bg-slate-800 rounded-2xl shadow-xl border border-slate-700 p-6">
