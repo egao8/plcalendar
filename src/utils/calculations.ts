@@ -225,3 +225,48 @@ export const calculateAverageTradesPerDay = (entries: DayEntry[]): number => {
   return totalTrades / weekdayEntries.length;
 };
 
+export const calculateMonthlyPL = (entries: DayEntry[], month: Date): number => {
+  const monthEntries = entries.filter(entry => {
+    const entryDate = new Date(entry.id);
+    return entryDate.getMonth() === month.getMonth() && 
+           entryDate.getFullYear() === month.getFullYear();
+  });
+  return monthEntries.reduce((sum, entry) => sum + entry.totalPL, 0);
+};
+
+export const calculateWeeklyPL = (entries: DayEntry[]): number => {
+  if (entries.length === 0) return 0;
+  
+  // Get the most recent entry date
+  const sortedEntries = [...entries].sort((a, b) => b.id.localeCompare(a.id));
+  const mostRecentDate = new Date(sortedEntries[0].id);
+  
+  // Calculate start of the week (Sunday) for the most recent entry
+  const startOfWeek = new Date(mostRecentDate);
+  startOfWeek.setDate(mostRecentDate.getDate() - mostRecentDate.getDay());
+  startOfWeek.setHours(0, 0, 0, 0);
+  
+  // Calculate end of week (Saturday)
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  endOfWeek.setHours(23, 59, 59, 999);
+  
+  // Filter entries for this week
+  const weekEntries = entries.filter(entry => {
+    const entryDate = new Date(entry.id);
+    return entryDate >= startOfWeek && entryDate <= endOfWeek;
+  });
+  
+  return weekEntries.reduce((sum, entry) => sum + entry.totalPL, 0);
+};
+
+export const getMostRecentMonthWithData = (entries: DayEntry[]): Date => {
+  if (entries.length === 0) {
+    return new Date(); // Current month if no data
+  }
+  
+  const sortedEntries = [...entries].sort((a, b) => b.id.localeCompare(a.id));
+  const mostRecentDate = new Date(sortedEntries[0].id);
+  return new Date(mostRecentDate.getFullYear(), mostRecentDate.getMonth(), 1);
+};
+

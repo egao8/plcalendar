@@ -1,16 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar } from './components/Calendar';
 import { DayEntryModal } from './components/DayEntryModal';
 import { Sidebar } from './components/Sidebar';
 import { Analytics } from './components/Analytics';
 import { PasswordProtection } from './components/PasswordProtection';
 import { useFirebaseData } from './hooks/useFirebaseData';
+import { getMostRecentMonthWithData } from './utils/calculations';
 
 type View = 'calendar' | 'analytics';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentMonth, setCurrentMonth] = useState(new Date(2025, 8, 1)); // September 2025
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [currentView, setCurrentView] = useState<View>('calendar');
 
@@ -22,6 +23,19 @@ function App() {
     deleteEntry,
     saveSettings
   } = useFirebaseData();
+
+  // Set current month to most recent month with data once entries are loaded
+  useEffect(() => {
+    if (entries.length > 0) {
+      const recentMonth = getMostRecentMonthWithData(entries);
+      // Only update if we're still on the initial/current month
+      if (currentMonth.getFullYear() === new Date().getFullYear() && 
+          currentMonth.getMonth() === new Date().getMonth()) {
+        setCurrentMonth(recentMonth);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entries]);
 
   const handleSetPassword = (password: string) => {
     saveSettings({ ...settings, password });
@@ -69,6 +83,7 @@ function App() {
             <Sidebar
               entries={entries}
               settings={settings}
+              currentMonth={currentMonth}
               onUpdateSettings={handleUpdateSettings}
               onNavigateToAnalytics={() => setCurrentView(currentView === 'calendar' ? 'analytics' : 'calendar')}
               currentView={currentView}
