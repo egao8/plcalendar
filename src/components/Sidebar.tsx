@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
 import { TrendingUp, TrendingDown, DollarSign, Settings, Calendar as CalendarIcon } from 'lucide-react';
 import { DayEntry, UserSettings } from '../types';
-import { calculateMonthlyPL, calculateWeeklyPL, formatCurrency } from '../utils/calculations';
+import { 
+  calculateMonthlyPL, 
+  calculateWeeklyPL, 
+  getTotalFallingKnives,
+  getMonthlyFallingKnives,
+  formatCurrency 
+} from '../utils/calculations';
 import { format } from 'date-fns';
 
 interface SidebarProps {
@@ -29,6 +35,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const monthlyPL = calculatedMonthlyPL + monthlyManualAdjustment;
   
   const weeklyPL = calculateWeeklyPL(entries);
+  
+  const totalFK = getTotalFallingKnives(entries);
+  const monthlyFK = getMonthlyFallingKnives(entries, currentMonth);
 
   const handleSaveMonthlyAdjustment = () => {
     const adjustment = parseFloat(monthlyAdjustment);
@@ -207,6 +216,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="text-sm text-slate-400 mb-1">Loss Days</div>
           <div className="text-2xl font-bold text-red-400">
             {entries.filter(e => e.totalPL < 0).length}
+          </div>
+        </div>
+
+        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+          <div className="text-sm text-red-400 mb-1">🔪 Falling Knives</div>
+          <div className="flex justify-between items-end">
+            <div>
+              <div className="text-2xl font-bold text-red-400">
+                {totalFK}
+              </div>
+              <div className="text-xs text-slate-500 mt-1">All time</div>
+            </div>
+            <div className="text-right">
+              <div className="text-xl font-bold text-red-300">
+                {monthlyFK}
+              </div>
+              <div className="text-xs text-slate-500 mt-1">This month</div>
+            </div>
           </div>
         </div>
       </div>

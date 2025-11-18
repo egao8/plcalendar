@@ -270,3 +270,25 @@ export const getMostRecentMonthWithData = (entries: DayEntry[]): Date => {
   return new Date(mostRecentDate.getFullYear(), mostRecentDate.getMonth(), 1);
 };
 
+// Falling Knife Stats
+export const getTotalFallingKnives = (entries: DayEntry[]): number => {
+  return entries.reduce((sum, entry) => sum + (entry.fallingKnives || 0), 0);
+};
+
+export const getMonthlyFallingKnives = (entries: DayEntry[], month: Date): number => {
+  const monthEntries = entries.filter(entry => {
+    const entryDate = new Date(entry.id);
+    return entryDate.getMonth() === month.getMonth() && 
+           entryDate.getFullYear() === month.getFullYear();
+  });
+  return monthEntries.reduce((sum, entry) => sum + (entry.fallingKnives || 0), 0);
+};
+
+export const calculateFKWinRate = (entries: DayEntry[]): number => {
+  // Win rate excluding days with falling knives
+  const nonFKDays = entries.filter(e => e.totalPL !== 0 && (e.fallingKnives || 0) === 0);
+  if (nonFKDays.length === 0) return 0;
+  const wins = nonFKDays.filter(e => e.totalPL > 0).length;
+  return (wins / nonFKDays.length) * 100;
+};
+

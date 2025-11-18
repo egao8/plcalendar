@@ -36,6 +36,7 @@ export const DayEntryModal: React.FC<DayEntryModalProps> = ({
   const [notes, setNotes] = useState(existingEntry?.notes || '');
   const [selectedTags, setSelectedTags] = useState<string[]>(existingEntry?.tags || []);
   const [customTag, setCustomTag] = useState('');
+  const [fallingKnives, setFallingKnives] = useState(existingEntry?.fallingKnives || 0);
   // Track raw input strings for percentages to allow typing "0.05"
   const [percentInputs, setPercentInputs] = useState<{[key: number]: string}>({});
 
@@ -84,7 +85,8 @@ export const DayEntryModal: React.FC<DayEntryModalProps> = ({
       trades: validTrades,
       numberOfTrades: validTrades.length,
       notes,
-      tags: selectedTags
+      tags: selectedTags,
+      fallingKnives: fallingKnives
     };
     onSave(entry);
     onClose();
@@ -225,6 +227,34 @@ export const DayEntryModal: React.FC<DayEntryModalProps> = ({
               >
                 Add
               </button>
+            </div>
+          </div>
+
+          {/* Falling Knife Counter */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-slate-300 mb-3">
+              Falling Knives 🔪
+            </label>
+            <div className="flex items-center gap-4 bg-slate-700/50 rounded-lg p-4">
+              <button
+                onClick={() => setFallingKnives(Math.max(0, fallingKnives - 1))}
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-bold text-xl transition-colors"
+              >
+                −
+              </button>
+              <div className="flex-1 text-center">
+                <div className="text-3xl font-bold text-red-400">{fallingKnives}</div>
+                <div className="text-xs text-slate-500 mt-1">Caught today</div>
+              </div>
+              <button
+                onClick={() => setFallingKnives(fallingKnives + 1)}
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-bold text-xl transition-colors"
+              >
+                +
+              </button>
+            </div>
+            <div className="text-xs text-slate-500 mt-2">
+              Track when you caught a falling knife (bought too early on a dip)
             </div>
           </div>
 

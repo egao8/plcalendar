@@ -10,6 +10,7 @@ export interface DayEntry {
   numberOfTrades: number;
   notes: string;
   tags: string[];
+  fallingKnives?: number; // Count of falling knife catches
 }
 
 export interface UserSettings {

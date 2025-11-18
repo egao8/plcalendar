@@ -28,6 +28,8 @@ import {
   getReturnDistribution,
   calculateRecoveryFactor,
   calculateAverageTradesPerDay,
+  calculateFKWinRate,
+  getTotalFallingKnives,
   formatCurrency,
   formatPercent
 } from '../utils/calculations';
@@ -69,6 +71,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
     const streaks = getWinLossStreaks(entries);
     return {
       winRate: calculateWinRate(entries),
+      fkWinRate: calculateFKWinRate(entries),
       avgReturn: calculateAverageReturn(entries),
       maxDrawdown: calculateMaxDrawdown(entries),
       profitFactor: calculateProfitFactor(entries),
@@ -81,7 +84,8 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
       longestWinStreak: streaks.longestWinStreak,
       longestLossStreak: streaks.longestLossStreak,
       recoveryFactor: calculateRecoveryFactor(entries),
-      avgTradesPerDay: calculateAverageTradesPerDay(entries)
+      avgTradesPerDay: calculateAverageTradesPerDay(entries),
+      totalFK: getTotalFallingKnives(entries)
     };
   }, [entries]);
 
@@ -144,7 +148,14 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
           <MetricCard
             title="Win Rate"
             value={formatPercent(metrics.winRate)}
+            subtitle="All trading days"
             color="text-green-400"
+          />
+          <MetricCard
+            title="FK Win Rate"
+            value={formatPercent(metrics.fkWinRate)}
+            subtitle={`Excluding ${metrics.totalFK} FK days`}
+            color="text-cyan-400"
           />
           <MetricCard
             title="Average Return per Trade"
