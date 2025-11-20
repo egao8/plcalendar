@@ -48,25 +48,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <div className="bg-slate-800 rounded-2xl shadow-xl border border-slate-700 p-6 space-y-6">
+    <div className="bg-quant-card rounded-xl shadow-quant border border-quant-border p-6 space-y-5">
       {/* Navigation */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 p-1 bg-quant-surface rounded-lg">
         <button
           onClick={() => currentView === 'analytics' && onNavigateToAnalytics()}
-          className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+          className={`flex-1 py-2.5 px-4 rounded-md font-semibold text-sm transition-all ${
             currentView === 'calendar'
-              ? 'bg-blue-500 text-white'
-              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              ? 'bg-gradient-to-r from-quant-accent to-quant-accentDark text-white shadow-lg'
+              : 'text-slate-400 hover:text-white hover:bg-quant-card'
           }`}
         >
           Calendar
         </button>
         <button
           onClick={onNavigateToAnalytics}
-          className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+          className={`flex-1 py-2.5 px-4 rounded-md font-semibold text-sm transition-all ${
             currentView === 'analytics'
-              ? 'bg-blue-500 text-white'
-              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              ? 'bg-gradient-to-r from-quant-accent to-quant-accentDark text-white shadow-lg'
+              : 'text-slate-400 hover:text-white hover:bg-quant-card'
           }`}
         >
           Analytics
@@ -74,12 +74,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Monthly P&L */}
-      <div className={`rounded-xl p-5 border ${
+      <div className={`rounded-xl p-5 border backdrop-blur-sm ${
         monthlyPL > 0
-          ? 'bg-green-500/10 border-green-500/30'
+          ? 'bg-emerald-500/5 border-emerald-500/20'
           : monthlyPL < 0
-          ? 'bg-red-500/10 border-red-500/30'
-          : 'bg-slate-700 border-slate-600'
+          ? 'bg-red-500/5 border-red-500/20'
+          : 'bg-quant-surface border-quant-border'
       }`}>
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
@@ -152,12 +152,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Weekly P&L (Most Recent Week) */}
-      <div className={`rounded-xl p-5 border ${
+      <div className={`rounded-xl p-5 border backdrop-blur-sm ${
         weeklyPL > 0
-          ? 'bg-green-500/10 border-green-500/30'
+          ? 'bg-emerald-500/5 border-emerald-500/20'
           : weeklyPL < 0
-          ? 'bg-red-500/10 border-red-500/30'
-          : 'bg-slate-700 border-slate-600'
+          ? 'bg-red-500/5 border-red-500/20'
+          : 'bg-quant-surface border-quant-border'
       }`}>
         <div className="flex items-center gap-2 mb-2">
           {weeklyPL > 0 ? (
@@ -187,39 +187,39 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Quick Stats */}
       <div className="space-y-3">
-        <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">
-          Quick Stats
+        <h3 className="text-xs font-bold text-quant-accent uppercase tracking-widest border-b border-quant-border pb-2">
+          Performance Metrics
         </h3>
         
-        <div className="bg-slate-700/50 rounded-lg p-4">
+        <div className="bg-quant-surface/50 rounded-lg p-4 border border-quant-border/50">
           <div className="text-sm text-slate-400 mb-1">Total Trading Days</div>
           <div className="text-2xl font-bold text-white">
             {entries.length}
           </div>
         </div>
 
-        <div className="bg-slate-700/50 rounded-lg p-4">
+        <div className="bg-quant-surface/50 rounded-lg p-4 border border-quant-border/50">
           <div className="text-sm text-slate-400 mb-1">Total Trades</div>
-          <div className="text-2xl font-bold text-white">
+          <div className="text-2xl font-bold text-white font-mono">
             {entries.reduce((sum, e) => sum + e.numberOfTrades, 0)}
           </div>
         </div>
 
-        <div className="bg-slate-700/50 rounded-lg p-4">
+        <div className="bg-quant-surface/50 rounded-lg p-4 border border-emerald-500/20">
           <div className="text-sm text-slate-400 mb-1">Profitable Days</div>
-          <div className="text-2xl font-bold text-green-400">
+          <div className="text-2xl font-bold text-emerald-400 font-mono">
             {entries.filter(e => e.totalPL > 0).length}
           </div>
         </div>
 
-        <div className="bg-slate-700/50 rounded-lg p-4">
+        <div className="bg-quant-surface/50 rounded-lg p-4 border border-red-500/20">
           <div className="text-sm text-slate-400 mb-1">Loss Days</div>
-          <div className="text-2xl font-bold text-red-400">
+          <div className="text-2xl font-bold text-red-400 font-mono">
             {entries.filter(e => e.totalPL < 0).length}
           </div>
         </div>
 
-        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+        <div className="bg-red-500/5 border border-red-500/20 rounded-lg p-4">
           <div className="text-sm text-red-400 mb-1">🔪 Falling Knives</div>
           <div className="flex justify-between items-end">
             <div>

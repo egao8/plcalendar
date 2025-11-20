@@ -68,12 +68,17 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
-      <div className="max-w-[1800px] mx-auto">
+    <div className="min-h-screen bg-quant-bg p-4 md:p-6">
+      <div className="max-w-[1900px] mx-auto">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-4xl font-bold text-white mb-2">Trading P&L Calendar</h1>
-          <p className="text-slate-400">Track your performance and analyze your trading patterns</p>
+        <div className="mb-6 pb-6 border-b border-quant-border">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-1 h-8 bg-gradient-to-b from-quant-accent to-quant-accentDark rounded-full"></div>
+            <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
+              Quant Performance <span className="text-quant-accent">Analytics</span>
+            </h1>
+          </div>
+          <p className="text-slate-400 ml-4 text-sm">Advanced trading metrics and portfolio analysis</p>
         </div>
 
         {/* Main Layout */}

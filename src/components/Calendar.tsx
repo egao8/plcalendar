@@ -42,32 +42,32 @@ export const Calendar: React.FC<CalendarProps> = ({
   };
 
   const getDayColor = (entry?: DayEntry): string => {
-    if (!entry) return 'bg-slate-700 hover:bg-slate-600';
-    if (entry.totalPL > 0) return 'bg-green-500/20 hover:bg-green-500/30 border-green-500/50';
-    if (entry.totalPL < 0) return 'bg-red-500/20 hover:bg-red-500/30 border-red-500/50';
-    return 'bg-yellow-500/20 hover:bg-yellow-500/30 border-yellow-500/50';
+    if (!entry) return 'bg-quant-surface hover:bg-quant-card';
+    if (entry.totalPL > 0) return 'bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30';
+    if (entry.totalPL < 0) return 'bg-red-500/10 hover:bg-red-500/20 border-red-500/30';
+    return 'bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30';
   };
 
   return (
-    <div className="bg-slate-800 rounded-2xl shadow-xl border border-slate-700 overflow-hidden">
+    <div className="bg-quant-card rounded-xl shadow-quant-lg border border-quant-border overflow-hidden">
       {/* Header */}
-      <div className="bg-slate-900 px-6 py-4 flex justify-between items-center border-b border-slate-700">
+      <div className="bg-quant-surface px-6 py-4 flex justify-between items-center border-b border-quant-border">
         <button
           onClick={() => onMonthChange(subMonths(currentMonth, 1))}
-          className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-300 hover:text-white"
+          className="p-2 hover:bg-quant-accent/10 rounded-lg transition-all text-slate-400 hover:text-quant-accent"
         >
-          <ChevronLeft className="w-6 h-6" />
+          <ChevronLeft className="w-5 h-5" />
         </button>
         
-        <h2 className="text-2xl font-bold text-white">
+        <h2 className="text-xl font-bold text-white tracking-tight">
           {format(currentMonth, 'MMMM yyyy')}
         </h2>
         
         <button
           onClick={() => onMonthChange(addMonths(currentMonth, 1))}
-          className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-300 hover:text-white"
+          className="p-2 hover:bg-quant-accent/10 rounded-lg transition-all text-slate-400 hover:text-quant-accent"
         >
-          <ChevronRight className="w-6 h-6" />
+          <ChevronRight className="w-5 h-5" />
         </button>
       </div>
 
@@ -78,7 +78,7 @@ export const Calendar: React.FC<CalendarProps> = ({
           {weekDays.map(day => (
             <div
               key={day}
-              className="text-center text-sm font-semibold text-slate-400 py-2"
+              className="text-center text-xs font-bold text-quant-accent/70 uppercase tracking-wider py-2"
             >
               {day}
             </div>
@@ -97,10 +97,10 @@ export const Calendar: React.FC<CalendarProps> = ({
                 key={day.toString()}
                 onClick={() => onDayClick(day)}
                 className={`
-                  min-h-[120px] p-3 rounded-xl border-2 transition-all duration-200
-                  ${isCurrentMonth ? getDayColor(entry) : 'bg-slate-800/50 opacity-40'}
-                  ${isToday ? 'ring-2 ring-blue-400' : 'border-transparent'}
-                  ${isCurrentMonth ? 'hover:scale-105 cursor-pointer' : ''}
+                  min-h-[120px] p-3 rounded-lg border transition-all duration-200
+                  ${isCurrentMonth ? getDayColor(entry) : 'bg-quant-bg/50 opacity-30'}
+                  ${isToday ? 'ring-2 ring-quant-accent shadow-lg shadow-quant-accent/20' : 'border-transparent'}
+                  ${isCurrentMonth ? 'hover:scale-[1.02] hover:shadow-lg cursor-pointer' : ''}
                 `}
               >
                 <div className="flex flex-col h-full">
