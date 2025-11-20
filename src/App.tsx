@@ -73,7 +73,7 @@ function App() {
         {/* Header */}
         <div className="mb-4 pb-4 border-b border-quant-border">
           <h1 className="text-2xl font-semibold text-white tracking-tight mb-1">
-            Trading Performance Dashboard
+            EGAlpha Returns
           </h1>
           <p className="text-slate-500 text-xs">P&L tracking and analytics</p>
         </div>

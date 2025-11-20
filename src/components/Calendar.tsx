@@ -112,7 +112,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                   
                   {entry && isCurrentMonth && (
                     <div className="flex-1 flex flex-col justify-between">
-                      <div className={`text-sm font-mono font-semibold ${
+                      <div className={`text-lg font-mono font-bold ${
                         entry.totalPL > 0 ? 'text-green-400' :
                         entry.totalPL < 0 ? 'text-red-400' :
                         'text-yellow-400'

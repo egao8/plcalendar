@@ -43,7 +43,7 @@ export const PasswordProtection: React.FC<PasswordProtectionProps> = ({
           <div className="bg-quant-surface p-4 mb-4 border border-quant-border">
             <Lock className="w-12 h-12 text-slate-400" />
           </div>
-          <h1 className="text-2xl font-semibold text-white mb-2">Trading Performance Dashboard</h1>
+          <h1 className="text-2xl font-semibold text-white mb-2">EGAlpha Returns</h1>
           <p className="text-slate-400 text-center">
             {isSettingPassword ? 'Set your password to get started' : 'Enter password to access'}
           </p>
