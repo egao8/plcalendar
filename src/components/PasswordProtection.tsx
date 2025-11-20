@@ -38,9 +38,9 @@ export const PasswordProtection: React.FC<PasswordProtectionProps> = ({
 
   return (
     <div className="min-h-screen bg-quant-bg flex items-center justify-center p-4">
-      <div className="bg-quant-card rounded-xl shadow-quant-lg p-8 w-full max-w-md border border-quant-accent/20">
+      <div className="bg-quant-card rounded-xl shadow-2xl p-8 w-full max-w-md border border-quant-border">
         <div className="flex flex-col items-center mb-8">
-          <div className="bg-gradient-to-br from-quant-accent/10 to-quant-accentDark/10 p-4 rounded-full mb-4 border border-quant-accent/20">
+          <div className="bg-quant-surface p-4 rounded-full mb-4 border border-quant-border">
             <Lock className="w-12 h-12 text-quant-accent" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Quant Performance <span className="text-quant-accent">Analytics</span></h1>
@@ -76,7 +76,7 @@ export const PasswordProtection: React.FC<PasswordProtectionProps> = ({
 
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-quant-accent to-quant-accentDark hover:shadow-lg hover:shadow-quant-accent/20 text-white font-bold py-3 rounded-lg transition-all duration-200"
+            className="w-full bg-quant-accent hover:bg-quant-accentDark text-white font-bold py-3 rounded-lg transition-colors duration-200"
           >
             {isSettingPassword ? 'Set Password' : 'Access Dashboard'}
           </button>

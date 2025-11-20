@@ -73,7 +73,7 @@ function App() {
         {/* Header */}
         <div className="mb-6 pb-6 border-b border-quant-border">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-1 h-8 bg-gradient-to-b from-quant-accent to-quant-accentDark rounded-full"></div>
+            <div className="w-1 h-8 bg-quant-accent rounded-full"></div>
             <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
               Quant Performance <span className="text-quant-accent">Analytics</span>
             </h1>

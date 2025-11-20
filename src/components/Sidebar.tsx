@@ -48,14 +48,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <div className="bg-quant-card rounded-xl shadow-quant border border-quant-border p-6 space-y-5">
+    <div className="bg-quant-card rounded-xl shadow-xl border border-quant-border p-6 space-y-5">
       {/* Navigation */}
       <div className="flex gap-2 p-1 bg-quant-surface rounded-lg">
         <button
           onClick={() => currentView === 'analytics' && onNavigateToAnalytics()}
-          className={`flex-1 py-2.5 px-4 rounded-md font-semibold text-sm transition-all ${
+          className={`flex-1 py-2.5 px-4 rounded-md font-semibold text-sm transition-colors ${
             currentView === 'calendar'
-              ? 'bg-gradient-to-r from-quant-accent to-quant-accentDark text-white shadow-lg'
+              ? 'bg-quant-accent text-white'
               : 'text-slate-400 hover:text-white hover:bg-quant-card'
           }`}
         >
@@ -63,9 +63,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </button>
         <button
           onClick={onNavigateToAnalytics}
-          className={`flex-1 py-2.5 px-4 rounded-md font-semibold text-sm transition-all ${
+          className={`flex-1 py-2.5 px-4 rounded-md font-semibold text-sm transition-colors ${
             currentView === 'analytics'
-              ? 'bg-gradient-to-r from-quant-accent to-quant-accentDark text-white shadow-lg'
+              ? 'bg-quant-accent text-white'
               : 'text-slate-400 hover:text-white hover:bg-quant-card'
           }`}
         >
@@ -74,11 +74,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Monthly P&L */}
-      <div className={`rounded-xl p-5 border backdrop-blur-sm ${
+      <div className={`rounded-xl p-5 border ${
         monthlyPL > 0
-          ? 'bg-emerald-500/5 border-emerald-500/20'
+          ? 'bg-emerald-500/10 border-emerald-500/30'
           : monthlyPL < 0
-          ? 'bg-red-500/5 border-red-500/20'
+          ? 'bg-red-500/10 border-red-500/30'
           : 'bg-quant-surface border-quant-border'
       }`}>
         <div className="flex items-center justify-between mb-2">
@@ -152,11 +152,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Weekly P&L (Most Recent Week) */}
-      <div className={`rounded-xl p-5 border backdrop-blur-sm ${
+      <div className={`rounded-xl p-5 border ${
         weeklyPL > 0
-          ? 'bg-emerald-500/5 border-emerald-500/20'
+          ? 'bg-emerald-500/10 border-emerald-500/30'
           : weeklyPL < 0
-          ? 'bg-red-500/5 border-red-500/20'
+          ? 'bg-red-500/10 border-red-500/30'
           : 'bg-quant-surface border-quant-border'
       }`}>
         <div className="flex items-center gap-2 mb-2">
@@ -198,28 +198,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
 
-        <div className="bg-quant-surface/50 rounded-lg p-4 border border-quant-border/50">
+        <div className="bg-quant-surface rounded-lg p-4 border border-quant-border">
           <div className="text-sm text-slate-400 mb-1">Total Trades</div>
           <div className="text-2xl font-bold text-white font-mono">
             {entries.reduce((sum, e) => sum + e.numberOfTrades, 0)}
           </div>
         </div>
 
-        <div className="bg-quant-surface/50 rounded-lg p-4 border border-emerald-500/20">
+        <div className="bg-quant-surface rounded-lg p-4 border border-emerald-500/30">
           <div className="text-sm text-slate-400 mb-1">Profitable Days</div>
           <div className="text-2xl font-bold text-emerald-400 font-mono">
             {entries.filter(e => e.totalPL > 0).length}
           </div>
         </div>
 
-        <div className="bg-quant-surface/50 rounded-lg p-4 border border-red-500/20">
+        <div className="bg-quant-surface rounded-lg p-4 border border-red-500/30">
           <div className="text-sm text-slate-400 mb-1">Loss Days</div>
           <div className="text-2xl font-bold text-red-400 font-mono">
             {entries.filter(e => e.totalPL < 0).length}
           </div>
         </div>
 
-        <div className="bg-red-500/5 border border-red-500/20 rounded-lg p-4">
+        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
           <div className="text-sm text-red-400 mb-1">🔪 Falling Knives</div>
           <div className="flex justify-between items-end">
             <div>

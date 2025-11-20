@@ -49,7 +49,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   };
 
   return (
-    <div className="bg-quant-card rounded-xl shadow-quant-lg border border-quant-border overflow-hidden">
+    <div className="bg-quant-card rounded-xl shadow-xl border border-quant-border overflow-hidden">
       {/* Header */}
       <div className="bg-quant-surface px-6 py-4 flex justify-between items-center border-b border-quant-border">
         <button
@@ -97,10 +97,10 @@ export const Calendar: React.FC<CalendarProps> = ({
                 key={day.toString()}
                 onClick={() => onDayClick(day)}
                 className={`
-                  min-h-[120px] p-3 rounded-lg border transition-all duration-200
+                  min-h-[120px] p-3 rounded-lg border transition-colors duration-200
                   ${isCurrentMonth ? getDayColor(entry) : 'bg-quant-bg/50 opacity-30'}
-                  ${isToday ? 'ring-2 ring-quant-accent shadow-lg shadow-quant-accent/20' : 'border-transparent'}
-                  ${isCurrentMonth ? 'hover:scale-[1.02] hover:shadow-lg cursor-pointer' : ''}
+                  ${isToday ? 'ring-2 ring-quant-accent' : 'border-transparent'}
+                  ${isCurrentMonth ? 'cursor-pointer' : ''}
                 `}
               >
                 <div className="flex flex-col h-full">

@@ -100,12 +100,12 @@ export const DayEntryModal: React.FC<DayEntryModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50">
-      <div className="bg-quant-card rounded-xl shadow-quant-lg w-full max-w-3xl max-h-[90vh] overflow-hidden border border-quant-accent/20">
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+      <div className="bg-quant-card rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden border border-quant-border">
         {/* Header */}
         <div className="bg-quant-surface px-6 py-4 flex justify-between items-center border-b border-quant-border">
           <div className="flex items-center gap-3">
-            <div className="w-1 h-10 bg-gradient-to-b from-quant-accent to-quant-accentDark rounded-full"></div>
+            <div className="w-1 h-10 bg-quant-accent rounded-full"></div>
             <div>
               <h2 className="text-xl font-bold text-white tracking-tight">
                 {format(date, 'MMMM d, yyyy')}
@@ -146,7 +146,7 @@ export const DayEntryModal: React.FC<DayEntryModalProps> = ({
               </label>
               <button
                 onClick={addTrade}
-                className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-quant-accent to-quant-accentDark hover:shadow-lg hover:shadow-quant-accent/20 text-white text-sm rounded-lg transition-all"
+                className="flex items-center gap-2 px-3 py-1.5 bg-quant-accent hover:bg-quant-accentDark text-white text-sm rounded-lg transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 Add Trade
@@ -194,9 +194,9 @@ export const DayEntryModal: React.FC<DayEntryModalProps> = ({
                 <button
                   key={tag}
                   onClick={() => toggleTag(tag)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                  className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
                     selectedTags.includes(tag)
-                      ? 'bg-gradient-to-r from-quant-accent to-quant-accentDark text-white shadow-md'
+                      ? 'bg-quant-accent text-white'
                       : 'bg-quant-surface text-slate-300 hover:bg-quant-card border border-quant-border'
                   }`}
                 >
@@ -207,10 +207,10 @@ export const DayEntryModal: React.FC<DayEntryModalProps> = ({
             {selectedTags.filter(t => !COMMON_TAGS.includes(t)).map(tag => (
               <span
                 key={tag}
-                className="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg text-sm font-semibold mr-2 mb-2 shadow-md"
+                className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-600 text-white rounded-lg text-sm font-semibold mr-2 mb-2"
               >
                 {tag}
-                <button onClick={() => toggleTag(tag)} className="hover:scale-110 transition-transform">
+                <button onClick={() => toggleTag(tag)} className="hover:opacity-75 transition-opacity">
                   <X className="w-4 h-4" />
                 </button>
               </span>
@@ -226,7 +226,7 @@ export const DayEntryModal: React.FC<DayEntryModalProps> = ({
               />
               <button
                 onClick={addCustomTag}
-                className="px-4 py-2 bg-gradient-to-r from-quant-accent to-quant-accentDark hover:shadow-lg hover:shadow-quant-accent/20 text-white rounded-lg transition-all font-semibold"
+                className="px-4 py-2 bg-quant-accent hover:bg-quant-accentDark text-white rounded-lg transition-colors font-semibold"
               >
                 Add
               </button>
@@ -296,7 +296,7 @@ export const DayEntryModal: React.FC<DayEntryModalProps> = ({
             </button>
             <button
               onClick={handleSave}
-              className="px-6 py-2 bg-gradient-to-r from-quant-accent to-quant-accentDark hover:shadow-lg hover:shadow-quant-accent/20 text-white rounded-lg transition-all font-semibold"
+              className="px-6 py-2 bg-quant-accent hover:bg-quant-accentDark text-white rounded-lg transition-colors font-semibold"
             >
               Save Entry
             </button>

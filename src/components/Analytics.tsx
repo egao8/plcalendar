@@ -122,7 +122,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
 
   const MetricCard: React.FC<{ title: string; value: string | number; subtitle?: string; color?: string }> = 
     ({ title, value, subtitle, color = 'text-quant-accent' }) => (
-      <div className="bg-quant-surface/50 rounded-lg p-5 border border-quant-border hover:border-quant-accent/30 transition-all hover:shadow-quant">
+      <div className="bg-quant-surface rounded-lg p-5 border border-quant-border hover:border-quant-accent/50 transition-colors">
         <div className="text-xs text-slate-400 mb-2 uppercase tracking-wider font-semibold">{title}</div>
         <div className={`text-2xl font-bold font-mono ${color}`}>{value}</div>
         {subtitle && <div className="text-xs text-slate-500 mt-1">{subtitle}</div>}
@@ -142,9 +142,9 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
   return (
     <div className="space-y-6">
       {/* Core Performance Metrics */}
-      <div className="bg-quant-card rounded-xl shadow-quant-lg border border-quant-border p-6">
+      <div className="bg-quant-card rounded-xl shadow-xl border border-quant-border p-6">
         <div className="flex items-center gap-2 mb-6">
-          <div className="w-1 h-6 bg-gradient-to-b from-quant-accent to-quant-accentDark rounded-full"></div>
+          <div className="w-1 h-6 bg-quant-accent rounded-full"></div>
           <h2 className="text-xl font-bold text-white tracking-tight">Core Performance Metrics</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -235,9 +235,9 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
       </div>
 
       {/* Cumulative P&L Chart */}
-      <div className="bg-quant-card rounded-xl shadow-quant-lg border border-quant-border p-6">
+      <div className="bg-quant-card rounded-xl shadow-xl border border-quant-border p-6">
         <div className="flex items-center gap-2 mb-6">
-          <div className="w-1 h-6 bg-gradient-to-b from-quant-accent to-quant-accentDark rounded-full"></div>
+          <div className="w-1 h-6 bg-quant-accent rounded-full"></div>
           <h2 className="text-xl font-bold text-white tracking-tight">Cumulative P&L Over Time</h2>
         </div>
         <ResponsiveContainer width="100%" height={300}>
@@ -278,7 +278,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
       {/* Daily P&L Chart */}
       <div className="bg-quant-card rounded-xl shadow-quant-lg border border-quant-border p-6">
         <div className="flex items-center gap-2 mb-6">
-          <div className="w-1 h-6 bg-gradient-to-b from-quant-accent to-quant-accentDark rounded-full"></div>
+          <div className="w-1 h-6 bg-quant-accent rounded-full"></div>
           <h2 className="text-xl font-bold text-white tracking-tight">Daily P&L</h2>
         </div>
         <ResponsiveContainer width="100%" height={300}>
@@ -314,7 +314,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
       {/* P&L by Ticker */}
       <div className="bg-quant-card rounded-xl shadow-quant-lg border border-quant-border p-6">
         <div className="flex items-center gap-2 mb-6">
-          <div className="w-1 h-6 bg-gradient-to-b from-quant-accent to-quant-accentDark rounded-full"></div>
+          <div className="w-1 h-6 bg-quant-accent rounded-full"></div>
           <h2 className="text-xl font-bold text-white tracking-tight">Top 10 Tickers by P&L</h2>
         </div>
         <ResponsiveContainer width="100%" height={400}>
@@ -352,7 +352,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
       {/* P&L by Day of Week */}
       <div className="bg-quant-card rounded-xl shadow-quant-lg border border-quant-border p-6">
         <div className="flex items-center gap-2 mb-6">
-          <div className="w-1 h-6 bg-gradient-to-b from-quant-accent to-quant-accentDark rounded-full"></div>
+          <div className="w-1 h-6 bg-quant-accent rounded-full"></div>
           <h2 className="text-xl font-bold text-white tracking-tight">P&L by Day of Week</h2>
         </div>
         <ResponsiveContainer width="100%" height={300}>
@@ -387,9 +387,9 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
 
       {/* P&L by Tag/Strategy */}
       {plByTag.length > 0 && (
-        <div className="bg-quant-card rounded-xl shadow-quant-lg border border-quant-border p-6">
+        <div className="bg-quant-card rounded-xl shadow-xl border border-quant-border p-6">
           <div className="flex items-center gap-2 mb-6">
-            <div className="w-1 h-6 bg-gradient-to-b from-quant-accent to-quant-accentDark rounded-full"></div>
+            <div className="w-1 h-6 bg-quant-accent rounded-full"></div>
             <h2 className="text-xl font-bold text-white tracking-tight">P&L by Strategy/Tag</h2>
           </div>
           <ResponsiveContainer width="100%" height={Math.max(300, plByTag.length * 50)}>
@@ -432,7 +432,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
       {/* Return Distribution */}
       <div className="bg-quant-card rounded-xl shadow-quant-lg border border-quant-border p-6">
         <div className="flex items-center gap-2 mb-6">
-          <div className="w-1 h-6 bg-gradient-to-b from-quant-accent to-quant-accentDark rounded-full"></div>
+          <div className="w-1 h-6 bg-quant-accent rounded-full"></div>
           <h2 className="text-xl font-bold text-white tracking-tight">Trade Return Distribution</h2>
         </div>
         <ResponsiveContainer width="100%" height={300}>
