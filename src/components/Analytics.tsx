@@ -121,18 +121,18 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
   }, [entries]);
 
   const MetricCard: React.FC<{ title: string; value: string | number; subtitle?: string; color?: string }> = 
-    ({ title, value, subtitle, color = 'text-quant-accent' }) => (
-      <div className="bg-quant-surface rounded-lg p-5 border border-quant-border hover:border-quant-accent/50 transition-colors">
-        <div className="text-xs text-slate-400 mb-2 uppercase tracking-wider font-semibold">{title}</div>
-        <div className={`text-2xl font-bold font-mono ${color}`}>{value}</div>
-        {subtitle && <div className="text-xs text-slate-500 mt-1">{subtitle}</div>}
+    ({ title, value, subtitle, color = 'text-white' }) => (
+      <div className="bg-quant-surface p-3 border-l-2 border-l-quant-border hover:border-l-quant-accent transition-colors">
+        <div className="text-xs text-slate-500 mb-1 uppercase tracking-wide font-medium">{title}</div>
+        <div className={`text-xl font-semibold font-mono ${color}`}>{value}</div>
+        {subtitle && <div className="text-xs text-slate-600 mt-1">{subtitle}</div>}
       </div>
     );
 
   if (entries.length === 0) {
     return (
-      <div className="bg-quant-card rounded-xl shadow-quant border border-quant-border p-12 text-center">
-        <div className="text-slate-400 text-lg">
+      <div className="bg-quant-card border border-quant-border p-12 text-center">
+        <div className="text-slate-400 text-sm">
           No trading data yet. Start by adding entries to the calendar!
         </div>
       </div>
@@ -140,13 +140,10 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Core Performance Metrics */}
-      <div className="bg-quant-card rounded-xl shadow-xl border border-quant-border p-6">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="w-1 h-6 bg-quant-accent rounded-full"></div>
-          <h2 className="text-xl font-bold text-white tracking-tight">Core Performance Metrics</h2>
-        </div>
+      <div className="bg-quant-card border border-quant-border p-4">
+        <h2 className="text-sm font-semibold text-white tracking-tight mb-4 pb-2 border-b border-quant-border">CORE PERFORMANCE METRICS</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           <MetricCard
             title="Win Rate"
@@ -235,11 +232,8 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
       </div>
 
       {/* Cumulative P&L Chart */}
-      <div className="bg-quant-card rounded-xl shadow-xl border border-quant-border p-6">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="w-1 h-6 bg-quant-accent rounded-full"></div>
-          <h2 className="text-xl font-bold text-white tracking-tight">Cumulative P&L Over Time</h2>
-        </div>
+      <div className="bg-quant-card border border-quant-border p-4">
+        <h2 className="text-sm font-semibold text-white tracking-tight mb-4 pb-2 border-b border-quant-border">CUMULATIVE P&L</h2>
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={cumulativePLData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#2d3348" />
@@ -254,21 +248,21 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
               tickFormatter={(value) => formatCurrency(value)}
             />
             <Tooltip 
-              contentStyle={{ backgroundColor: '#1a1f3a', border: '1px solid #6366f1', borderRadius: '8px' }}
+              contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
               labelStyle={{ color: '#e2e8f0' }}
               formatter={(value: number) => [formatCurrency(value), 'P&L']}
             />
             <Area 
               type="monotone" 
               dataKey="pl" 
-              stroke="#6366f1" 
+              stroke="#3b82f6" 
               fill="url(#plGradient)"
-              strokeWidth={2}
+              strokeWidth={1.5}
             />
             <defs>
               <linearGradient id="plGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#6366f1" stopOpacity={0.4} />
-                <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.2} />
+                <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
               </linearGradient>
             </defs>
           </AreaChart>
@@ -276,11 +270,8 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
       </div>
 
       {/* Daily P&L Chart */}
-      <div className="bg-quant-card rounded-xl shadow-quant-lg border border-quant-border p-6">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="w-1 h-6 bg-quant-accent rounded-full"></div>
-          <h2 className="text-xl font-bold text-white tracking-tight">Daily P&L</h2>
-        </div>
+      <div className="bg-quant-card border border-quant-border p-4">
+        <h2 className="text-sm font-semibold text-white tracking-tight mb-4 pb-2 border-b border-quant-border">DAILY P&L</h2>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={dailyPLData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#2d3348" />
@@ -295,11 +286,11 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
               tickFormatter={(value) => formatCurrency(value)}
             />
             <Tooltip 
-              contentStyle={{ backgroundColor: '#1a1f3a', border: '1px solid #6366f1', borderRadius: '8px' }}
+              contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
               labelStyle={{ color: '#e2e8f0' }}
               formatter={(value: number) => [formatCurrency(value), 'P&L']}
             />
-            <Bar dataKey="pl" radius={[4, 4, 0, 0]}>
+            <Bar dataKey="pl">
               {dailyPLData.map((entry, index) => (
                 <Cell 
                   key={`cell-${index}`} 

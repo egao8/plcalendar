@@ -42,30 +42,30 @@ export const Calendar: React.FC<CalendarProps> = ({
   };
 
   const getDayColor = (entry?: DayEntry): string => {
-    if (!entry) return 'bg-quant-surface hover:bg-quant-card';
-    if (entry.totalPL > 0) return 'bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30';
-    if (entry.totalPL < 0) return 'bg-red-500/10 hover:bg-red-500/20 border-red-500/30';
-    return 'bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30';
+    if (!entry) return 'bg-quant-surface hover:bg-quant-card border-quant-border';
+    if (entry.totalPL > 0) return 'bg-quant-surface hover:bg-quant-card border-l-4 border-l-emerald-500 border-t border-r border-b border-quant-border';
+    if (entry.totalPL < 0) return 'bg-quant-surface hover:bg-quant-card border-l-4 border-l-red-500 border-t border-r border-b border-quant-border';
+    return 'bg-quant-surface hover:bg-quant-card border-l-4 border-l-amber-500 border-t border-r border-b border-quant-border';
   };
 
   return (
-    <div className="bg-quant-card rounded-xl shadow-xl border border-quant-border overflow-hidden">
+    <div className="bg-quant-card border border-quant-border">
       {/* Header */}
-      <div className="bg-quant-surface px-6 py-4 flex justify-between items-center border-b border-quant-border">
+      <div className="bg-quant-surface px-4 py-3 flex justify-between items-center border-b border-quant-border">
         <button
           onClick={() => onMonthChange(subMonths(currentMonth, 1))}
-          className="p-2 hover:bg-quant-accent/10 rounded-lg transition-all text-slate-400 hover:text-quant-accent"
+          className="p-1 hover:bg-quant-surface transition-colors text-slate-400 hover:text-white"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
         
-        <h2 className="text-xl font-bold text-white tracking-tight">
+        <h2 className="text-base font-semibold text-white tracking-tight uppercase">
           {format(currentMonth, 'MMMM yyyy')}
         </h2>
         
         <button
           onClick={() => onMonthChange(addMonths(currentMonth, 1))}
-          className="p-2 hover:bg-quant-accent/10 rounded-lg transition-all text-slate-400 hover:text-quant-accent"
+          className="p-1 hover:bg-quant-surface transition-colors text-slate-400 hover:text-white"
         >
           <ChevronRight className="w-5 h-5" />
         </button>
@@ -78,7 +78,7 @@ export const Calendar: React.FC<CalendarProps> = ({
           {weekDays.map(day => (
             <div
               key={day}
-              className="text-center text-xs font-bold text-quant-accent/70 uppercase tracking-wider py-2"
+              className="text-center text-xs font-medium text-slate-500 uppercase tracking-wide py-2 border-b border-quant-border"
             >
               {day}
             </div>
@@ -97,9 +97,9 @@ export const Calendar: React.FC<CalendarProps> = ({
                 key={day.toString()}
                 onClick={() => onDayClick(day)}
                 className={`
-                  min-h-[120px] p-3 rounded-lg border transition-colors duration-200
-                  ${isCurrentMonth ? getDayColor(entry) : 'bg-quant-bg/50 opacity-30'}
-                  ${isToday ? 'ring-2 ring-quant-accent' : 'border-transparent'}
+                  min-h-[100px] p-2 transition-colors
+                  ${isCurrentMonth ? getDayColor(entry) : 'bg-quant-bg opacity-20 border border-quant-border'}
+                  ${isToday ? 'ring-1 ring-inset ring-quant-accent' : ''}
                   ${isCurrentMonth ? 'cursor-pointer' : ''}
                 `}
               >
@@ -112,7 +112,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                   
                   {entry && isCurrentMonth && (
                     <div className="flex-1 flex flex-col justify-between">
-                      <div className={`text-lg font-bold ${
+                      <div className={`text-sm font-mono font-semibold ${
                         entry.totalPL > 0 ? 'text-green-400' :
                         entry.totalPL < 0 ? 'text-red-400' :
                         'text-yellow-400'

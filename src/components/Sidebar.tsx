@@ -48,38 +48,38 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <div className="bg-quant-card rounded-xl shadow-xl border border-quant-border p-6 space-y-5">
+    <div className="bg-quant-card border border-quant-border p-4 space-y-4">
       {/* Navigation */}
-      <div className="flex gap-2 p-1 bg-quant-surface rounded-lg">
+      <div className="flex border-b border-quant-border">
         <button
           onClick={() => currentView === 'analytics' && onNavigateToAnalytics()}
-          className={`flex-1 py-2.5 px-4 rounded-md font-semibold text-sm transition-colors ${
+          className={`flex-1 py-2 px-4 text-xs font-medium transition-colors ${
             currentView === 'calendar'
-              ? 'bg-quant-accent text-white'
-              : 'text-slate-400 hover:text-white hover:bg-quant-card'
+              ? 'text-white border-b-2 border-quant-accent'
+              : 'text-slate-400 hover:text-white'
           }`}
         >
-          Calendar
+          CALENDAR
         </button>
         <button
           onClick={onNavigateToAnalytics}
-          className={`flex-1 py-2.5 px-4 rounded-md font-semibold text-sm transition-colors ${
+          className={`flex-1 py-2 px-4 text-xs font-medium transition-colors ${
             currentView === 'analytics'
-              ? 'bg-quant-accent text-white'
-              : 'text-slate-400 hover:text-white hover:bg-quant-card'
+              ? 'text-white border-b-2 border-quant-accent'
+              : 'text-slate-400 hover:text-white'
           }`}
         >
-          Analytics
+          ANALYTICS
         </button>
       </div>
 
       {/* Monthly P&L */}
-      <div className={`rounded-xl p-5 border ${
+      <div className={`p-4 border-l-2 bg-quant-surface ${
         monthlyPL > 0
-          ? 'bg-emerald-500/10 border-emerald-500/30'
+          ? 'border-l-emerald-500'
           : monthlyPL < 0
-          ? 'bg-red-500/10 border-red-500/30'
-          : 'bg-quant-surface border-quant-border'
+          ? 'border-l-red-500'
+          : 'border-l-quant-border'
       }`}>
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
@@ -152,12 +152,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Weekly P&L (Most Recent Week) */}
-      <div className={`rounded-xl p-5 border ${
+      <div className={`p-4 border-l-2 bg-quant-surface ${
         weeklyPL > 0
-          ? 'bg-emerald-500/10 border-emerald-500/30'
+          ? 'border-l-emerald-500'
           : weeklyPL < 0
-          ? 'bg-red-500/10 border-red-500/30'
-          : 'bg-quant-surface border-quant-border'
+          ? 'border-l-red-500'
+          : 'border-l-quant-border'
       }`}>
         <div className="flex items-center gap-2 mb-2">
           {weeklyPL > 0 ? (
@@ -198,28 +198,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
 
-        <div className="bg-quant-surface rounded-lg p-4 border border-quant-border">
-          <div className="text-sm text-slate-400 mb-1">Total Trades</div>
-          <div className="text-2xl font-bold text-white font-mono">
+        <div className="bg-quant-surface p-3 border-l-2 border-l-quant-border">
+          <div className="text-xs text-slate-500 mb-1">Total Trades</div>
+          <div className="text-xl font-semibold text-white font-mono">
             {entries.reduce((sum, e) => sum + e.numberOfTrades, 0)}
           </div>
         </div>
 
-        <div className="bg-quant-surface rounded-lg p-4 border border-emerald-500/30">
-          <div className="text-sm text-slate-400 mb-1">Profitable Days</div>
-          <div className="text-2xl font-bold text-emerald-400 font-mono">
+        <div className="bg-quant-surface p-3 border-l-2 border-l-emerald-500">
+          <div className="text-xs text-slate-500 mb-1">Profitable Days</div>
+          <div className="text-xl font-semibold text-emerald-400 font-mono">
             {entries.filter(e => e.totalPL > 0).length}
           </div>
         </div>
 
-        <div className="bg-quant-surface rounded-lg p-4 border border-red-500/30">
-          <div className="text-sm text-slate-400 mb-1">Loss Days</div>
-          <div className="text-2xl font-bold text-red-400 font-mono">
+        <div className="bg-quant-surface p-3 border-l-2 border-l-red-500">
+          <div className="text-xs text-slate-500 mb-1">Loss Days</div>
+          <div className="text-xl font-semibold text-red-400 font-mono">
             {entries.filter(e => e.totalPL < 0).length}
           </div>
         </div>
 
-        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+        <div className="bg-quant-surface p-3 border-l-2 border-l-red-500">
           <div className="text-sm text-red-400 mb-1">🔪 Falling Knives</div>
           <div className="flex justify-between items-end">
             <div>

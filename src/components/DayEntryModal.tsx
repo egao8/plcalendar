@@ -100,22 +100,19 @@ export const DayEntryModal: React.FC<DayEntryModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-      <div className="bg-quant-card rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden border border-quant-border">
+    <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50">
+      <div className="bg-quant-card w-full max-w-3xl max-h-[90vh] overflow-hidden border border-quant-border">
         {/* Header */}
-        <div className="bg-quant-surface px-6 py-4 flex justify-between items-center border-b border-quant-border">
-          <div className="flex items-center gap-3">
-            <div className="w-1 h-10 bg-quant-accent rounded-full"></div>
-            <div>
-              <h2 className="text-xl font-bold text-white tracking-tight">
-                {format(date, 'MMMM d, yyyy')}
-              </h2>
-              <p className="text-slate-400 text-sm">{format(date, 'EEEE')}</p>
-            </div>
+        <div className="bg-quant-surface px-4 py-3 flex justify-between items-center border-b border-quant-border">
+          <div>
+            <h2 className="text-base font-semibold text-white">
+              {format(date, 'MMMM d, yyyy')}
+            </h2>
+            <p className="text-slate-500 text-xs">{format(date, 'EEEE')}</p>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-quant-accent transition-colors"
+            className="text-slate-400 hover:text-white transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -133,7 +130,7 @@ export const DayEntryModal: React.FC<DayEntryModalProps> = ({
               step="0.01"
               value={totalPL}
               onChange={(e) => setTotalPL(e.target.value)}
-              className="w-full px-4 py-3 bg-quant-surface border border-quant-border rounded-lg text-white text-lg font-bold font-mono focus:outline-none focus:ring-2 focus:ring-quant-accent focus:border-transparent"
+              className="w-full px-3 py-2 bg-quant-surface border border-quant-border text-white text-base font-semibold font-mono focus:outline-none focus:ring-1 focus:ring-quant-accent"
               placeholder="0.00"
             />
           </div>
@@ -146,7 +143,7 @@ export const DayEntryModal: React.FC<DayEntryModalProps> = ({
               </label>
               <button
                 onClick={addTrade}
-                className="flex items-center gap-2 px-3 py-1.5 bg-quant-accent hover:bg-quant-accentDark text-white text-sm rounded-lg transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 bg-quant-accent hover:bg-quant-accentDark text-white text-xs font-medium transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 Add Trade
@@ -160,7 +157,7 @@ export const DayEntryModal: React.FC<DayEntryModalProps> = ({
                     type="text"
                     value={trade.symbol}
                     onChange={(e) => updateTrade(index, 'symbol', e.target.value.toUpperCase())}
-                    className="flex-1 px-4 py-2 bg-quant-surface border border-quant-border rounded-lg text-white font-mono uppercase focus:outline-none focus:ring-2 focus:ring-quant-accent focus:border-transparent"
+                    className="flex-1 px-3 py-2 bg-quant-surface border border-quant-border text-white text-sm font-mono uppercase focus:outline-none focus:ring-1 focus:ring-quant-accent"
                     placeholder="Symbol (e.g., AAPL)"
                   />
                   <input
@@ -168,7 +165,7 @@ export const DayEntryModal: React.FC<DayEntryModalProps> = ({
                     step="any"
                     value={percentInputs[index] !== undefined ? percentInputs[index] : (trade.percentReturn || '')}
                     onChange={(e) => updateTrade(index, 'percentReturn', e.target.value)}
-                    className="w-32 px-4 py-2 bg-quant-surface border border-quant-border rounded-lg text-white font-mono focus:outline-none focus:ring-2 focus:ring-quant-accent focus:border-transparent"
+                    className="w-32 px-3 py-2 bg-quant-surface border border-quant-border text-white text-sm font-mono focus:outline-none focus:ring-1 focus:ring-quant-accent"
                     placeholder="% Return"
                   />
                   {trades.length > 1 && (
@@ -194,10 +191,10 @@ export const DayEntryModal: React.FC<DayEntryModalProps> = ({
                 <button
                   key={tag}
                   onClick={() => toggleTag(tag)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
+                  className={`px-3 py-1.5 text-xs font-medium transition-colors ${
                     selectedTags.includes(tag)
-                      ? 'bg-quant-accent text-white'
-                      : 'bg-quant-surface text-slate-300 hover:bg-quant-card border border-quant-border'
+                      ? 'bg-quant-accent text-white border border-quant-accent'
+                      : 'bg-quant-surface text-slate-400 hover:text-white border border-quant-border'
                   }`}
                 >
                   {tag}
@@ -207,11 +204,11 @@ export const DayEntryModal: React.FC<DayEntryModalProps> = ({
             {selectedTags.filter(t => !COMMON_TAGS.includes(t)).map(tag => (
               <span
                 key={tag}
-                className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-600 text-white rounded-lg text-sm font-semibold mr-2 mb-2"
+                className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-600 text-white text-xs font-medium mr-2 mb-2 border border-slate-500"
               >
                 {tag}
-                <button onClick={() => toggleTag(tag)} className="hover:opacity-75 transition-opacity">
-                  <X className="w-4 h-4" />
+                <button onClick={() => toggleTag(tag)} className="hover:text-slate-300 transition-colors">
+                  <X className="w-3 h-3" />
                 </button>
               </span>
             ))}
@@ -221,12 +218,12 @@ export const DayEntryModal: React.FC<DayEntryModalProps> = ({
                 value={customTag}
                 onChange={(e) => setCustomTag(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomTag())}
-                className="flex-1 px-4 py-2 bg-quant-surface border border-quant-border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-quant-accent focus:border-transparent"
+                className="flex-1 px-3 py-2 bg-quant-surface border border-quant-border text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-quant-accent"
                 placeholder="Add custom tag..."
               />
               <button
                 onClick={addCustomTag}
-                className="px-4 py-2 bg-quant-accent hover:bg-quant-accentDark text-white rounded-lg transition-colors font-semibold"
+                className="px-3 py-2 bg-quant-accent hover:bg-quant-accentDark text-white text-xs font-medium transition-colors"
               >
                 Add
               </button>
@@ -269,34 +266,34 @@ export const DayEntryModal: React.FC<DayEntryModalProps> = ({
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full px-4 py-3 bg-quant-surface border border-quant-border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-quant-accent focus:border-transparent resize-none min-h-[120px]"
+              className="w-full px-3 py-2 bg-quant-surface border border-quant-border text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-quant-accent resize-none min-h-[100px]"
               placeholder="What happened today? Strategy notes, market conditions, lessons learned..."
             />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="bg-quant-surface px-6 py-4 flex justify-between items-center border-t border-quant-border">
+        <div className="bg-quant-surface px-4 py-3 flex justify-between items-center border-t border-quant-border">
           <div>
             {existingEntry && onDelete && (
               <button
                 onClick={handleDelete}
-                className="px-4 py-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors font-semibold"
+                className="px-4 py-2 text-red-400 hover:text-red-300 text-sm font-medium transition-colors"
               >
                 Delete Entry
               </button>
             )}
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="px-6 py-2 bg-quant-card hover:bg-quant-surface text-white rounded-lg transition-colors font-semibold"
+              className="px-4 py-2 bg-quant-card hover:bg-quant-surface text-white text-sm font-medium transition-colors border border-quant-border"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              className="px-6 py-2 bg-quant-accent hover:bg-quant-accentDark text-white rounded-lg transition-colors font-semibold"
+              className="px-4 py-2 bg-quant-accent hover:bg-quant-accentDark text-white text-sm font-medium transition-colors"
             >
               Save Entry
             </button>

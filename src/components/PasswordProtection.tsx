@@ -38,12 +38,12 @@ export const PasswordProtection: React.FC<PasswordProtectionProps> = ({
 
   return (
     <div className="min-h-screen bg-quant-bg flex items-center justify-center p-4">
-      <div className="bg-quant-card rounded-xl shadow-2xl p-8 w-full max-w-md border border-quant-border">
+      <div className="bg-quant-card p-8 w-full max-w-md border border-quant-border">
         <div className="flex flex-col items-center mb-8">
-          <div className="bg-quant-surface p-4 rounded-full mb-4 border border-quant-border">
-            <Lock className="w-12 h-12 text-quant-accent" />
+          <div className="bg-quant-surface p-4 mb-4 border border-quant-border">
+            <Lock className="w-12 h-12 text-slate-400" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Quant Performance <span className="text-quant-accent">Analytics</span></h1>
+          <h1 className="text-2xl font-semibold text-white mb-2">Trading Performance Dashboard</h1>
           <p className="text-slate-400 text-center">
             {isSettingPassword ? 'Set your password to get started' : 'Enter password to access'}
           </p>
@@ -62,7 +62,7 @@ export const PasswordProtection: React.FC<PasswordProtectionProps> = ({
                 setPassword(e.target.value);
                 setError('');
               }}
-              className="w-full px-4 py-3 bg-quant-surface border border-quant-border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-quant-accent focus:border-transparent"
+              className="w-full px-3 py-2 bg-quant-surface border border-quant-border text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-quant-accent"
               placeholder={isSettingPassword ? "Create a password" : "Enter password"}
               autoFocus
             />
@@ -76,7 +76,7 @@ export const PasswordProtection: React.FC<PasswordProtectionProps> = ({
 
           <button
             type="submit"
-            className="w-full bg-quant-accent hover:bg-quant-accentDark text-white font-bold py-3 rounded-lg transition-colors duration-200"
+            className="w-full bg-quant-accent hover:bg-quant-accentDark text-white font-medium py-2 transition-colors duration-200"
           >
             {isSettingPassword ? 'Set Password' : 'Access Dashboard'}
           </button>

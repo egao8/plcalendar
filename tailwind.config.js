@@ -12,13 +12,13 @@ export default {
         neutral: '#fbbf24',
         // Professional Quant Theme
         quant: {
-          bg: '#0a0e27',
-          surface: '#0f1629',
-          card: '#1a1f3a',
-          border: '#2d3348',
-          accent: '#6366f1',
-          accentLight: '#818cf8',
-          accentDark: '#4f46e5',
+          bg: '#0a0a0a',
+          surface: '#141414',
+          card: '#1a1a1a',
+          border: '#2a2a2a',
+          accent: '#3b82f6',
+          accentLight: '#60a5fa',
+          accentDark: '#2563eb',
         }
       },
       backgroundImage: {
