@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Calendar } from './components/Calendar';
 import { DayEntryModal } from './components/DayEntryModal';
 import { Sidebar } from './components/Sidebar';
 import { Analytics } from './components/Analytics';
 import { PasswordProtection } from './components/PasswordProtection';
 import { useFirebaseData } from './hooks/useFirebaseData';
-import { getMostRecentMonthWithData } from './utils/calculations';
 
 type View = 'calendar' | 'analytics';
 
@@ -24,18 +23,8 @@ function App() {
     saveSettings
   } = useFirebaseData();
 
-  // Set current month to most recent month with data once entries are loaded
-  useEffect(() => {
-    if (entries.length > 0) {
-      const recentMonth = getMostRecentMonthWithData(entries);
-      // Only update if we're still on the initial/current month
-      if (currentMonth.getFullYear() === new Date().getFullYear() && 
-          currentMonth.getMonth() === new Date().getMonth()) {
-        setCurrentMonth(recentMonth);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entries]);
+  // Keep the current month as-is (defaults to today's month)
+  // No need to auto-navigate to most recent month with data
 
   const handleSetPassword = (password: string) => {
     saveSettings({ ...settings, password });

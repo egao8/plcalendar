@@ -40,7 +40,8 @@ export const DayEntryModal: React.FC<DayEntryModalProps> = ({
   // Track raw input strings for percentages to allow typing "0.05"
   const [percentInputs, setPercentInputs] = useState<{[key: number]: string}>({});
 
-  const dateStr = format(date, 'yyyy-MM-dd');
+  // Ensure we use the local date components to avoid timezone shifting
+  const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
   const addTrade = () => {
     setTrades([...trades, { symbol: '', percentReturn: 0 }]);

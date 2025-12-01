@@ -1,5 +1,10 @@
 import { DayEntry } from '../types';
 
+// Filter out outlier entries (10,000+ profit) for stats calculations
+export const filterOutliers = (entries: DayEntry[]): DayEntry[] => {
+  return entries.filter(entry => entry.totalPL < 10000);
+};
+
 export const calculateCumulativePL = (entries: DayEntry[]): number => {
   return entries.reduce((sum, entry) => sum + entry.totalPL, 0);
 };
@@ -58,6 +63,25 @@ export const calculateSharpeRatio = (entries: DayEntry[]): number => {
   if (stdDev === 0) return 0;
   // Assuming risk-free rate of 0 for simplicity, annualized (sqrt(252) trading days)
   return (mean / stdDev) * Math.sqrt(252);
+};
+
+export const calculateSortinoRatio = (entries: DayEntry[]): number => {
+  const sortedEntries = [...entries].sort((a, b) => a.id.localeCompare(b.id));
+  if (sortedEntries.length === 0) return 0;
+
+  const returns = sortedEntries.map(e => e.totalPL);
+  const mean = returns.reduce((sum, r) => sum + r, 0) / returns.length;
+
+  // Calculate downside deviation (only negative returns below mean)
+  const downsideReturns = returns.filter(r => r < mean);
+  if (downsideReturns.length === 0) return mean > 0 ? Infinity : 0;
+
+  const downsideVariance = downsideReturns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / returns.length;
+  const downsideDeviation = Math.sqrt(downsideVariance);
+
+  if (downsideDeviation === 0) return mean > 0 ? Infinity : 0;
+  // Assuming risk-free rate of 0 for simplicity, annualized (sqrt(252) trading days)
+  return (mean / downsideDeviation) * Math.sqrt(252);
 };
 
 export const getPLByTicker = (entries: DayEntry[]): { ticker: string; pl: number; trades: number }[] => {

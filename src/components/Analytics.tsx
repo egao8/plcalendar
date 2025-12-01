@@ -13,11 +13,13 @@ import {
 } from 'recharts';
 import { DayEntry } from '../types';
 import {
+  filterOutliers,
   calculateWinRate,
   calculateAverageReturn,
   calculateMaxDrawdown,
   calculateProfitFactor,
   calculateSharpeRatio,
+  calculateSortinoRatio,
   calculateExpectancy,
   calculateAvgWinLossRatio,
   getLargestWinLoss,
@@ -39,9 +41,12 @@ interface AnalyticsProps {
 }
 
 export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
-  const sortedEntries = useMemo(() => 
-    [...entries].sort((a, b) => a.id.localeCompare(b.id)),
-    [entries]
+  // Filter out outliers (10,000+ profit days) for all stats calculations
+  const filteredEntries = useMemo(() => filterOutliers(entries), [entries]);
+
+  const sortedEntries = useMemo(() =>
+    [...filteredEntries].sort((a, b) => a.id.localeCompare(b.id)),
+    [filteredEntries]
   );
 
   // Calculate cumulative P&L over time
@@ -65,45 +70,46 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
     [sortedEntries]
   );
 
-  // Core metrics
+  // Core metrics (using filtered entries to exclude outliers)
   const metrics = useMemo(() => {
-    const winLoss = getLargestWinLoss(entries);
-    const streaks = getWinLossStreaks(entries);
+    const winLoss = getLargestWinLoss(filteredEntries);
+    const streaks = getWinLossStreaks(filteredEntries);
     return {
-      winRate: calculateWinRate(entries),
-      fkWinRate: calculateFKWinRate(entries),
-      avgReturn: calculateAverageReturn(entries),
-      maxDrawdown: calculateMaxDrawdown(entries),
-      profitFactor: calculateProfitFactor(entries),
-      sharpeRatio: calculateSharpeRatio(entries),
-      expectancy: calculateExpectancy(entries),
-      avgWinLossRatio: calculateAvgWinLossRatio(entries),
+      winRate: calculateWinRate(filteredEntries),
+      fkWinRate: calculateFKWinRate(filteredEntries),
+      avgReturn: calculateAverageReturn(filteredEntries),
+      maxDrawdown: calculateMaxDrawdown(filteredEntries),
+      profitFactor: calculateProfitFactor(filteredEntries),
+      sharpeRatio: calculateSharpeRatio(filteredEntries),
+      sortinoRatio: calculateSortinoRatio(filteredEntries),
+      expectancy: calculateExpectancy(filteredEntries),
+      avgWinLossRatio: calculateAvgWinLossRatio(filteredEntries),
       largestWin: winLoss.largestWin,
       largestLoss: winLoss.largestLoss,
       currentStreak: streaks.currentStreak,
       longestWinStreak: streaks.longestWinStreak,
       longestLossStreak: streaks.longestLossStreak,
-      recoveryFactor: calculateRecoveryFactor(entries),
-      avgTradesPerDay: calculateAverageTradesPerDay(entries),
-      totalFK: getTotalFallingKnives(entries)
+      recoveryFactor: calculateRecoveryFactor(filteredEntries),
+      avgTradesPerDay: calculateAverageTradesPerDay(filteredEntries),
+      totalFK: getTotalFallingKnives(filteredEntries)
     };
-  }, [entries]);
+  }, [filteredEntries]);
 
-  // P&L by ticker
-  const plByTicker = useMemo(() => 
-    getPLByTicker(entries).slice(0, 10),
-    [entries]
+  // P&L by ticker (using filtered entries)
+  const plByTicker = useMemo(() =>
+    getPLByTicker(filteredEntries).slice(0, 10),
+    [filteredEntries]
   );
 
-  // P&L by day of week
-  const plByDay = useMemo(() => getPLByDayOfWeek(entries), [entries]);
+  // P&L by day of week (using filtered entries)
+  const plByDay = useMemo(() => getPLByDayOfWeek(filteredEntries), [filteredEntries]);
 
-  // P&L by tag/strategy
-  const plByTag = useMemo(() => getPLByTag(entries), [entries]);
+  // P&L by tag/strategy (using filtered entries)
+  const plByTag = useMemo(() => getPLByTag(filteredEntries), [filteredEntries]);
 
-  // Return distribution (histogram)
+  // Return distribution (histogram) (using filtered entries)
   const returnDistribution = useMemo(() => {
-    const returns = getReturnDistribution(entries);
+    const returns = getReturnDistribution(filteredEntries);
     const bins: { range: string; count: number }[] = [];
     const binSize = 5;
     const minReturn = Math.floor(Math.min(...returns, 0) / binSize) * binSize;
@@ -139,8 +145,18 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
     );
   }
 
+  const outlierCount = entries.length - filteredEntries.length;
+
   return (
     <div className="space-y-4">
+      {/* Outlier Notice */}
+      {outlierCount > 0 && (
+        <div className="bg-yellow-900/20 border border-yellow-700/50 p-3 rounded">
+          <div className="text-yellow-400 text-sm">
+            <strong>Note:</strong> {outlierCount} outlier day{outlierCount !== 1 ? 's' : ''} with 10,000+ profit excluded from statistics to ensure accuracy.
+          </div>
+        </div>
+      )}
       {/* Core Performance Metrics */}
       <div className="bg-quant-card border border-quant-border p-4">
         <h2 className="text-sm font-semibold text-white tracking-tight mb-4 pb-2 border-b border-quant-border">CORE PERFORMANCE METRICS</h2>
@@ -184,6 +200,12 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
             title="Sharpe Ratio"
             value={metrics.sharpeRatio.toFixed(2)}
             subtitle="Risk-adjusted return"
+            color="text-purple-400"
+          />
+          <MetricCard
+            title="Sortino Ratio"
+            value={metrics.sortinoRatio === Infinity ? '∞' : metrics.sortinoRatio.toFixed(2)}
+            subtitle="Downside risk-adjusted return"
             color="text-purple-400"
           />
           <MetricCard

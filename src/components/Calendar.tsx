@@ -37,7 +37,8 @@ export const Calendar: React.FC<CalendarProps> = ({
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   const getEntryForDate = (date: Date): DayEntry | undefined => {
-    const dateStr = format(date, 'yyyy-MM-dd');
+    // Use local date components to avoid timezone shifting
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     return entries.find(e => e.id === dateStr);
   };
 
