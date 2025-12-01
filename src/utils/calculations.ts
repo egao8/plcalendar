@@ -63,14 +63,23 @@ export const calculateSharpeRatio = (entries: DayEntry[]): number => {
   const sortedEntries = [...entries].sort((a, b) => a.id.localeCompare(b.id));
   if (sortedEntries.length === 0) return 0;
 
-  const returns = sortedEntries.map(e => e.totalPL);
-  const mean = returns.reduce((sum, r) => sum + r, 0) / returns.length;
-  const variance = returns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / returns.length;
+  // Calculate returns as a running account balance to get percentage returns
+  let cumulative = 0;
+  const percentReturns: number[] = [];
+
+  sortedEntries.forEach(entry => {
+    const previousBalance = cumulative || 10000; // Assume $10k starting if first trade
+    cumulative += entry.totalPL;
+    const percentReturn = (entry.totalPL / previousBalance) * 100;
+    percentReturns.push(percentReturn);
+  });
+
+  const mean = percentReturns.reduce((sum, r) => sum + r, 0) / percentReturns.length;
+  const variance = percentReturns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / percentReturns.length;
   const stdDev = Math.sqrt(variance);
 
   if (stdDev === 0) return 0;
   // Annualized Sharpe ratio - using sqrt(252) for ~252 trading days per year
-  // This gives a standardized metric comparable across different time periods
   return (mean / stdDev) * Math.sqrt(252);
 };
 
@@ -78,14 +87,24 @@ export const calculateSortinoRatio = (entries: DayEntry[]): number => {
   const sortedEntries = [...entries].sort((a, b) => a.id.localeCompare(b.id));
   if (sortedEntries.length === 0) return 0;
 
-  const returns = sortedEntries.map(e => e.totalPL);
-  const mean = returns.reduce((sum, r) => sum + r, 0) / returns.length;
+  // Calculate returns as a running account balance to get percentage returns
+  let cumulative = 0;
+  const percentReturns: number[] = [];
+
+  sortedEntries.forEach(entry => {
+    const previousBalance = cumulative || 10000; // Assume $10k starting if first trade
+    cumulative += entry.totalPL;
+    const percentReturn = (entry.totalPL / previousBalance) * 100;
+    percentReturns.push(percentReturn);
+  });
+
+  const mean = percentReturns.reduce((sum, r) => sum + r, 0) / percentReturns.length;
 
   // Calculate downside deviation (only negative returns below mean)
-  const downsideReturns = returns.filter(r => r < mean);
+  const downsideReturns = percentReturns.filter(r => r < mean);
   if (downsideReturns.length === 0) return mean > 0 ? Infinity : 0;
 
-  const downsideVariance = downsideReturns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / returns.length;
+  const downsideVariance = downsideReturns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / percentReturns.length;
   const downsideDeviation = Math.sqrt(downsideVariance);
 
   if (downsideDeviation === 0) return mean > 0 ? Infinity : 0;
@@ -425,5 +444,97 @@ export const calculateVolatilitySeries = (entries: DayEntry[], windowSize: numbe
   }
 
   return results;
+};
+
+// Calculate Calmar Ratio (Annual Return / Max Drawdown)
+export const calculateCalmarRatio = (entries: DayEntry[]): number => {
+  if (entries.length === 0) return 0;
+
+  const sorted = [...entries].sort((a, b) => a.id.localeCompare(b.id));
+  const totalPL = sorted.reduce((sum, e) => sum + e.totalPL, 0);
+  const dayCount = sorted.length;
+
+  // Annualized return estimate
+  const annualizedReturn = (totalPL / dayCount) * 252;
+
+  const maxDrawdownPercent = calculateMaxDrawdown(entries);
+
+  if (maxDrawdownPercent === 0) return annualizedReturn > 0 ? Infinity : 0;
+  return (annualizedReturn / maxDrawdownPercent);
+};
+
+// Calculate win/loss by hour (if we had intraday data, but we'll use tags as proxy)
+export const getConsecutiveWinsLosses = (entries: DayEntry[]): { consecutive: number; type: 'win' | 'loss' }[] => {
+  const sorted = [...entries].sort((a, b) => a.id.localeCompare(b.id)).filter(e => e.totalPL !== 0);
+  const results: { consecutive: number; type: 'win' | 'loss' }[] = [];
+  let currentStreak = 0;
+  let currentType: 'win' | 'loss' | null = null;
+
+  sorted.forEach(entry => {
+    const type: 'win' | 'loss' = entry.totalPL > 0 ? 'win' : 'loss';
+
+    if (type === currentType) {
+      currentStreak++;
+    } else {
+      if (currentType !== null) {
+        results.push({ consecutive: currentStreak, type: currentType });
+      }
+      currentType = type;
+      currentStreak = 1;
+    }
+  });
+
+  if (currentType !== null) {
+    results.push({ consecutive: currentStreak, type: currentType });
+  }
+
+  return results;
+};
+
+// R-Multiple analysis (how many times your average loss do you make on winners)
+export const calculateRMultiples = (entries: DayEntry[]): { avgWinR: number; avgLossR: number; rMultiples: number[] } => {
+  const wins = entries.filter(e => e.totalPL > 0);
+  const losses = entries.filter(e => e.totalPL < 0);
+
+  const avgWin = wins.length > 0 ? wins.reduce((sum, e) => sum + e.totalPL, 0) / wins.length : 0;
+  const avgLoss = losses.length > 0 ? Math.abs(losses.reduce((sum, e) => sum + e.totalPL, 0) / losses.length) : 1;
+
+  const rMultiples = entries.map(e => {
+    if (avgLoss === 0) return 0;
+    return e.totalPL / avgLoss;
+  });
+
+  return {
+    avgWinR: avgLoss > 0 ? avgWin / avgLoss : 0,
+    avgLossR: -1, // By definition
+    rMultiples
+  };
+};
+
+// Monte Carlo simulation for risk of ruin
+export const calculateRiskMetrics = (entries: DayEntry[]): {
+  valueAtRisk95: number;
+  valueAtRisk99: number;
+  conditionalVaR95: number;
+} => {
+  const sorted = [...entries].sort((a, b) => a.totalPL - b.totalPL);
+
+  const index95 = Math.floor(sorted.length * 0.05);
+  const index99 = Math.floor(sorted.length * 0.01);
+
+  const valueAtRisk95 = sorted[index95]?.totalPL || 0;
+  const valueAtRisk99 = sorted[index99]?.totalPL || 0;
+
+  // Conditional VaR (expected loss beyond VaR)
+  const tailLosses = sorted.slice(0, index95);
+  const conditionalVaR95 = tailLosses.length > 0
+    ? tailLosses.reduce((sum, e) => sum + e.totalPL, 0) / tailLosses.length
+    : 0;
+
+  return {
+    valueAtRisk95,
+    valueAtRisk99,
+    conditionalVaR95
+  };
 };
 

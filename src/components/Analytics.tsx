@@ -40,6 +40,9 @@ import {
   calculateDrawdownSeries,
   calculateMonthlyReturns,
   calculateVolatilitySeries,
+  calculateCalmarRatio,
+  getConsecutiveWinsLosses,
+  calculateRiskMetrics,
   formatCurrency,
   formatPercent
 } from '../utils/calculations';
@@ -82,6 +85,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
   const metrics = useMemo(() => {
     const winLoss = getLargestWinLoss(filteredEntries);
     const streaks = getWinLossStreaks(filteredEntries);
+    const riskMetrics = calculateRiskMetrics(filteredEntries);
     return {
       winRate: calculateWinRate(filteredEntries),
       fkWinRate: calculateFKWinRate(filteredEntries),
@@ -90,6 +94,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
       profitFactor: calculateProfitFactor(filteredEntries),
       sharpeRatio: calculateSharpeRatio(filteredEntries),
       sortinoRatio: calculateSortinoRatio(filteredEntries),
+      calmarRatio: calculateCalmarRatio(filteredEntries),
       expectancy: calculateExpectancy(filteredEntries),
       avgWinLossRatio: calculateAvgWinLossRatio(filteredEntries),
       largestWin: winLoss.largestWin,
@@ -99,7 +104,8 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
       longestLossStreak: streaks.longestLossStreak,
       recoveryFactor: calculateRecoveryFactor(filteredEntries),
       avgTradesPerDay: calculateAverageTradesPerDay(filteredEntries),
-      totalFK: getTotalFallingKnives(filteredEntries)
+      totalFK: getTotalFallingKnives(filteredEntries),
+      ...riskMetrics
     };
   }, [filteredEntries]);
 
@@ -140,6 +146,36 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
   const drawdownSeries = useMemo(() => calculateDrawdownSeries(filteredEntries), [filteredEntries]);
   const monthlyReturns = useMemo(() => calculateMonthlyReturns(filteredEntries), [filteredEntries]);
   const volatilitySeries = useMemo(() => calculateVolatilitySeries(filteredEntries, 20), [filteredEntries]);
+
+  // Streak distribution data
+  const streakDistribution = useMemo(() => {
+    const streaks = getConsecutiveWinsLosses(filteredEntries);
+    const winStreaks = streaks.filter(s => s.type === 'win').map(s => ({ length: s.consecutive, type: 'Win' as const }));
+    const lossStreaks = streaks.filter(s => s.type === 'loss').map(s => ({ length: s.consecutive, type: 'Loss' as const }));
+
+    // Count streaks by length
+    const streakCounts = new Map<string, { wins: number; losses: number }>();
+
+    winStreaks.forEach(s => {
+      const key = `${s.length}`;
+      const current = streakCounts.get(key) || { wins: 0, losses: 0 };
+      streakCounts.set(key, { ...current, wins: current.wins + 1 });
+    });
+
+    lossStreaks.forEach(s => {
+      const key = `${s.length}`;
+      const current = streakCounts.get(key) || { wins: 0, losses: 0 };
+      streakCounts.set(key, { ...current, losses: current.losses + 1 });
+    });
+
+    return Array.from(streakCounts.entries())
+      .map(([length, counts]) => ({
+        length: parseInt(length),
+        wins: counts.wins,
+        losses: counts.losses
+      }))
+      .sort((a, b) => a.length - b.length);
+  }, [filteredEntries]);
 
   const MetricCard: React.FC<{ title: string; value: string | number; subtitle?: string; color?: string }> = 
     ({ title, value, subtitle, color = 'text-white' }) => (
@@ -224,8 +260,32 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
             color="text-purple-400"
           />
           <MetricCard
+            title="Calmar Ratio"
+            value={metrics.calmarRatio === Infinity ? '∞' : metrics.calmarRatio.toFixed(2)}
+            subtitle="Annual return ÷ max DD"
+            color="text-purple-400"
+          />
+          <MetricCard
             title="Max Drawdown"
             value={formatPercent(metrics.maxDrawdown)}
+            color="text-red-400"
+          />
+          <MetricCard
+            title="VaR (95%)"
+            value={formatCurrency(metrics.valueAtRisk95)}
+            subtitle="5% worst-case daily loss"
+            color="text-orange-400"
+          />
+          <MetricCard
+            title="VaR (99%)"
+            value={formatCurrency(metrics.valueAtRisk99)}
+            subtitle="1% worst-case daily loss"
+            color="text-red-400"
+          />
+          <MetricCard
+            title="CVaR (95%)"
+            value={formatCurrency(metrics.conditionalVaR95)}
+            subtitle="Expected tail loss"
             color="text-red-400"
           />
           <MetricCard
@@ -674,6 +734,37 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
                 dot={false}
               />
             </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Streak Distribution */}
+      {streakDistribution.length > 0 && (
+        <div className="bg-quant-card border border-quant-border p-4">
+          <h2 className="text-sm font-semibold text-white tracking-tight mb-4 pb-2 border-b border-quant-border">WIN/LOSS STREAK DISTRIBUTION</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={streakDistribution}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#2d3348" />
+              <XAxis
+                dataKey="length"
+                stroke="#9ca3af"
+                tick={{ fill: '#9ca3af' }}
+                label={{ value: 'Consecutive Days', position: 'insideBottom', offset: -5, fill: '#9ca3af' }}
+              />
+              <YAxis
+                stroke="#9ca3af"
+                tick={{ fill: '#9ca3af' }}
+                label={{ value: 'Frequency', angle: -90, position: 'insideLeft', fill: '#9ca3af' }}
+              />
+              <Tooltip
+                contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                labelStyle={{ color: '#e2e8f0' }}
+                formatter={(value: number, name: string) => [value, name === 'wins' ? 'Win Streaks' : 'Loss Streaks']}
+              />
+              <Legend />
+              <Bar dataKey="wins" fill="#10b981" name="Win Streaks" />
+              <Bar dataKey="losses" fill="#ef4444" name="Loss Streaks" />
+            </BarChart>
           </ResponsiveContainer>
         </div>
       )}
