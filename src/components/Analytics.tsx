@@ -4,10 +4,14 @@ import {
   Bar,
   AreaChart,
   Area,
+  LineChart,
+  Line,
+  ComposedChart,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
   ResponsiveContainer,
   Cell
 } from 'recharts';
@@ -32,6 +36,10 @@ import {
   calculateAverageTradesPerDay,
   calculateFKWinRate,
   getTotalFallingKnives,
+  calculateRollingMetrics,
+  calculateDrawdownSeries,
+  calculateMonthlyReturns,
+  calculateVolatilitySeries,
   formatCurrency,
   formatPercent
 } from '../utils/calculations';
@@ -110,6 +118,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
   // Return distribution (histogram) (using filtered entries)
   const returnDistribution = useMemo(() => {
     const returns = getReturnDistribution(filteredEntries);
+    if (returns.length === 0) return [];
     const bins: { range: string; count: number }[] = [];
     const binSize = 5;
     const minReturn = Math.floor(Math.min(...returns, 0) / binSize) * binSize;
@@ -124,7 +133,13 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
     }
 
     return bins;
-  }, [entries]);
+  }, [filteredEntries]);
+
+  // Advanced analytics data
+  const rollingMetrics = useMemo(() => calculateRollingMetrics(filteredEntries, 20), [filteredEntries]);
+  const drawdownSeries = useMemo(() => calculateDrawdownSeries(filteredEntries), [filteredEntries]);
+  const monthlyReturns = useMemo(() => calculateMonthlyReturns(filteredEntries), [filteredEntries]);
+  const volatilitySeries = useMemo(() => calculateVolatilitySeries(filteredEntries, 20), [filteredEntries]);
 
   const MetricCard: React.FC<{ title: string; value: string | number; subtitle?: string; color?: string }> = 
     ({ title, value, subtitle, color = 'text-white' }) => (
@@ -451,20 +466,20 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={returnDistribution}>
             <CartesianGrid strokeDasharray="3 3" stroke="#2d3348" />
-            <XAxis 
-              dataKey="range" 
+            <XAxis
+              dataKey="range"
               stroke="#9ca3af"
               tick={{ fill: '#9ca3af', fontSize: 12 }}
               angle={-45}
               textAnchor="end"
               height={80}
             />
-            <YAxis 
+            <YAxis
               stroke="#9ca3af"
               tick={{ fill: '#9ca3af' }}
               label={{ value: 'Number of Trades', angle: -90, position: 'insideLeft', fill: '#9ca3af' }}
             />
-            <Tooltip 
+            <Tooltip
               contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px' }}
               labelStyle={{ color: '#e2e8f0' }}
             />
@@ -472,6 +487,196 @@ export const Analytics: React.FC<AnalyticsProps> = ({ entries }) => {
           </BarChart>
         </ResponsiveContainer>
       </div>
+
+      {/* Rolling Win Rate (20-day) */}
+      {rollingMetrics.length > 0 && (
+        <div className="bg-quant-card border border-quant-border p-4">
+          <h2 className="text-sm font-semibold text-white tracking-tight mb-4 pb-2 border-b border-quant-border">ROLLING WIN RATE (20-DAY)</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <ComposedChart data={rollingMetrics}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#2d3348" />
+              <XAxis
+                dataKey="date"
+                stroke="#9ca3af"
+                tick={{ fill: '#9ca3af' }}
+              />
+              <YAxis
+                yAxisId="left"
+                stroke="#10b981"
+                tick={{ fill: '#10b981' }}
+                tickFormatter={(value) => `${value.toFixed(0)}%`}
+              />
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                stroke="#3b82f6"
+                tick={{ fill: '#3b82f6' }}
+                tickFormatter={(value) => formatCurrency(value)}
+              />
+              <Tooltip
+                contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                labelStyle={{ color: '#e2e8f0' }}
+                formatter={(value: number, name: string) => {
+                  if (name === 'Win Rate') return [`${value.toFixed(1)}%`, name];
+                  if (name === 'Avg P&L') return [formatCurrency(value), name];
+                  return [formatCurrency(value), name];
+                }}
+              />
+              <Legend />
+              <Line
+                yAxisId="left"
+                type="monotone"
+                dataKey="winRate"
+                stroke="#10b981"
+                name="Win Rate"
+                strokeWidth={2}
+                dot={false}
+              />
+              <Line
+                yAxisId="right"
+                type="monotone"
+                dataKey="avgPL"
+                stroke="#3b82f6"
+                name="Avg P&L"
+                strokeWidth={2}
+                dot={false}
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Drawdown Chart */}
+      {drawdownSeries.length > 0 && (
+        <div className="bg-quant-card border border-quant-border p-4">
+          <h2 className="text-sm font-semibold text-white tracking-tight mb-4 pb-2 border-b border-quant-border">DRAWDOWN ANALYSIS</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={drawdownSeries}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#2d3348" />
+              <XAxis
+                dataKey="date"
+                stroke="#9ca3af"
+                tick={{ fill: '#9ca3af' }}
+              />
+              <YAxis
+                stroke="#9ca3af"
+                tick={{ fill: '#9ca3af' }}
+                tickFormatter={(value) => `${value.toFixed(1)}%`}
+                reversed
+              />
+              <Tooltip
+                contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                labelStyle={{ color: '#e2e8f0' }}
+                formatter={(value: number, name: string) => {
+                  if (name === 'Drawdown %') return [`${value.toFixed(2)}%`, name];
+                  return [formatCurrency(value), name];
+                }}
+              />
+              <Legend />
+              <Area
+                type="monotone"
+                dataKey="drawdown"
+                stroke="#ef4444"
+                fill="#ef4444"
+                fillOpacity={0.3}
+                name="Drawdown %"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Monthly Returns */}
+      {monthlyReturns.length > 0 && (
+        <div className="bg-quant-card border border-quant-border p-4">
+          <h2 className="text-sm font-semibold text-white tracking-tight mb-4 pb-2 border-quant-border">MONTHLY PERFORMANCE</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <ComposedChart data={monthlyReturns}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#2d3348" />
+              <XAxis
+                dataKey="month"
+                stroke="#9ca3af"
+                tick={{ fill: '#9ca3af' }}
+              />
+              <YAxis
+                yAxisId="left"
+                stroke="#9ca3af"
+                tick={{ fill: '#9ca3af' }}
+                tickFormatter={(value) => formatCurrency(value)}
+              />
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                stroke="#10b981"
+                tick={{ fill: '#10b981' }}
+                tickFormatter={(value) => `${value.toFixed(0)}%`}
+              />
+              <Tooltip
+                contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                labelStyle={{ color: '#e2e8f0' }}
+                formatter={(value: number, name: string) => {
+                  if (name === 'Win Rate') return [`${value.toFixed(1)}%`, name];
+                  if (name === 'P&L') return [formatCurrency(value), name];
+                  return [value, name];
+                }}
+              />
+              <Legend />
+              <Bar
+                yAxisId="left"
+                dataKey="pl"
+                name="P&L"
+              >
+                {monthlyReturns.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.pl > 0 ? '#10b981' : '#ef4444'} />
+                ))}
+              </Bar>
+              <Line
+                yAxisId="right"
+                type="monotone"
+                dataKey="winRate"
+                stroke="#10b981"
+                name="Win Rate"
+                strokeWidth={2}
+                dot={{ fill: '#10b981', r: 4 }}
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Volatility Chart */}
+      {volatilitySeries.length > 0 && (
+        <div className="bg-quant-card border border-quant-border p-4">
+          <h2 className="text-sm font-semibold text-white tracking-tight mb-4 pb-2 border-b border-quant-border">ROLLING VOLATILITY (20-DAY, ANNUALIZED)</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={volatilitySeries}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#2d3348" />
+              <XAxis
+                dataKey="date"
+                stroke="#9ca3af"
+                tick={{ fill: '#9ca3af' }}
+              />
+              <YAxis
+                stroke="#9ca3af"
+                tick={{ fill: '#9ca3af' }}
+                tickFormatter={(value) => formatCurrency(value)}
+              />
+              <Tooltip
+                contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                labelStyle={{ color: '#e2e8f0' }}
+                formatter={(value: number) => [formatCurrency(value), 'Volatility']}
+              />
+              <Line
+                type="monotone"
+                dataKey="volatility"
+                stroke="#f59e0b"
+                strokeWidth={2}
+                dot={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   );
 };

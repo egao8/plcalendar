@@ -69,9 +69,9 @@ export const calculateSharpeRatio = (entries: DayEntry[]): number => {
   const stdDev = Math.sqrt(variance);
 
   if (stdDev === 0) return 0;
-  // Daily Sharpe ratio (not annualized since we're using dollar P&L, not returns)
-  // For a more realistic ratio with dollar amounts
-  return mean / stdDev;
+  // Annualized Sharpe ratio - using sqrt(252) for ~252 trading days per year
+  // This gives a standardized metric comparable across different time periods
+  return (mean / stdDev) * Math.sqrt(252);
 };
 
 export const calculateSortinoRatio = (entries: DayEntry[]): number => {
@@ -89,8 +89,8 @@ export const calculateSortinoRatio = (entries: DayEntry[]): number => {
   const downsideDeviation = Math.sqrt(downsideVariance);
 
   if (downsideDeviation === 0) return mean > 0 ? Infinity : 0;
-  // Daily Sortino ratio (not annualized since we're using dollar P&L, not returns)
-  return mean / downsideDeviation;
+  // Annualized Sortino ratio
+  return (mean / downsideDeviation) * Math.sqrt(252);
 };
 
 export const getPLByTicker = (entries: DayEntry[]): { ticker: string; pl: number; trades: number }[] => {
@@ -327,5 +327,103 @@ export const calculateFKWinRate = (entries: DayEntry[]): number => {
   if (nonFKDays.length === 0) return 0;
   const wins = nonFKDays.filter(e => e.totalPL > 0).length;
   return (wins / nonFKDays.length) * 100;
+};
+
+// Advanced Analytics Functions
+
+export const calculateRollingMetrics = (
+  entries: DayEntry[],
+  windowSize: number = 20
+): { date: string; avgPL: number; winRate: number; cumulative: number }[] => {
+  const sorted = [...entries].sort((a, b) => a.id.localeCompare(b.id));
+  const results: { date: string; avgPL: number; winRate: number; cumulative: number }[] = [];
+  let cumulative = 0;
+
+  for (let i = 0; i < sorted.length; i++) {
+    cumulative += sorted[i].totalPL;
+    const windowStart = Math.max(0, i - windowSize + 1);
+    const window = sorted.slice(windowStart, i + 1);
+
+    const avgPL = window.reduce((sum, e) => sum + e.totalPL, 0) / window.length;
+    const tradingDays = window.filter(e => e.totalPL !== 0);
+    const wins = tradingDays.filter(e => e.totalPL > 0).length;
+    const winRate = tradingDays.length > 0 ? (wins / tradingDays.length) * 100 : 0;
+
+    results.push({
+      date: sorted[i].id,
+      avgPL,
+      winRate,
+      cumulative
+    });
+  }
+
+  return results;
+};
+
+export const calculateDrawdownSeries = (entries: DayEntry[]): { date: string; drawdown: number; underwater: number }[] => {
+  const sorted = [...entries].sort((a, b) => a.id.localeCompare(b.id));
+  let peak = 0;
+  let cumulative = 0;
+  const results: { date: string; drawdown: number; underwater: number }[] = [];
+
+  sorted.forEach(entry => {
+    cumulative += entry.totalPL;
+    if (cumulative > peak) peak = cumulative;
+
+    const drawdownDollars = peak - cumulative;
+    const drawdownPercent = peak > 0 ? (drawdownDollars / peak) * 100 : 0;
+
+    results.push({
+      date: entry.id,
+      drawdown: drawdownPercent,
+      underwater: drawdownDollars
+    });
+  });
+
+  return results;
+};
+
+export const calculateMonthlyReturns = (entries: DayEntry[]): { month: string; pl: number; trades: number; winRate: number }[] => {
+  const monthMap = new Map<string, DayEntry[]>();
+
+  entries.forEach(entry => {
+    const date = parseDateString(entry.id);
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    const monthEntries = monthMap.get(monthKey) || [];
+    monthEntries.push(entry);
+    monthMap.set(monthKey, monthEntries);
+  });
+
+  return Array.from(monthMap.entries())
+    .map(([month, monthEntries]) => {
+      const pl = monthEntries.reduce((sum, e) => sum + e.totalPL, 0);
+      const trades = monthEntries.reduce((sum, e) => sum + e.numberOfTrades, 0);
+      const tradingDays = monthEntries.filter(e => e.totalPL !== 0);
+      const wins = tradingDays.filter(e => e.totalPL > 0).length;
+      const winRate = tradingDays.length > 0 ? (wins / tradingDays.length) * 100 : 0;
+
+      return { month, pl, trades, winRate };
+    })
+    .sort((a, b) => a.month.localeCompare(b.month));
+};
+
+export const calculateVolatilitySeries = (entries: DayEntry[], windowSize: number = 20): { date: string; volatility: number }[] => {
+  const sorted = [...entries].sort((a, b) => a.id.localeCompare(b.id));
+  const results: { date: string; volatility: number }[] = [];
+
+  for (let i = windowSize - 1; i < sorted.length; i++) {
+    const window = sorted.slice(i - windowSize + 1, i + 1);
+    const returns = window.map(e => e.totalPL);
+    const mean = returns.reduce((sum, r) => sum + r, 0) / returns.length;
+    const variance = returns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / returns.length;
+    const volatility = Math.sqrt(variance);
+
+    results.push({
+      date: sorted[i].id,
+      volatility: volatility * Math.sqrt(252) // Annualized volatility
+    });
+  }
+
+  return results;
 };
 
