@@ -1,5 +1,13 @@
 import { DayEntry } from '../types';
 
+// Helper function to parse date string without timezone issues
+// entry.id format is "YYYY-MM-DD"
+const parseDateString = (dateStr: string): Date => {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  // Create date in local timezone
+  return new Date(year, month - 1, day);
+};
+
 // Filter out outlier entries (10,000+ profit) for stats calculations
 export const filterOutliers = (entries: DayEntry[]): DayEntry[] => {
   return entries.filter(entry => entry.totalPL < 10000);
@@ -61,8 +69,9 @@ export const calculateSharpeRatio = (entries: DayEntry[]): number => {
   const stdDev = Math.sqrt(variance);
 
   if (stdDev === 0) return 0;
-  // Assuming risk-free rate of 0 for simplicity, annualized (sqrt(252) trading days)
-  return (mean / stdDev) * Math.sqrt(252);
+  // Daily Sharpe ratio (not annualized since we're using dollar P&L, not returns)
+  // For a more realistic ratio with dollar amounts
+  return mean / stdDev;
 };
 
 export const calculateSortinoRatio = (entries: DayEntry[]): number => {
@@ -80,8 +89,8 @@ export const calculateSortinoRatio = (entries: DayEntry[]): number => {
   const downsideDeviation = Math.sqrt(downsideVariance);
 
   if (downsideDeviation === 0) return mean > 0 ? Infinity : 0;
-  // Assuming risk-free rate of 0 for simplicity, annualized (sqrt(252) trading days)
-  return (mean / downsideDeviation) * Math.sqrt(252);
+  // Daily Sortino ratio (not annualized since we're using dollar P&L, not returns)
+  return mean / downsideDeviation;
 };
 
 export const getPLByTicker = (entries: DayEntry[]): { ticker: string; pl: number; trades: number }[] => {
@@ -107,7 +116,7 @@ export const getPLByDayOfWeek = (entries: DayEntry[]): { day: string; pl: number
   const dayMap = new Map<number, number>();
 
   entries.forEach(entry => {
-    const date = new Date(entry.id);
+    const date = parseDateString(entry.id);
     const dayIndex = date.getDay();
     dayMap.set(dayIndex, (dayMap.get(dayIndex) || 0) + entry.totalPL);
   });
@@ -236,14 +245,14 @@ export const calculateRecoveryFactor = (entries: DayEntry[]): number => {
 
 export const calculateAverageTradesPerDay = (entries: DayEntry[]): number => {
   if (entries.length === 0) return 0;
-  
+
   // Only count weekdays (Monday-Friday)
   const weekdayEntries = entries.filter(entry => {
-    const date = new Date(entry.id);
+    const date = parseDateString(entry.id);
     const dayOfWeek = date.getDay();
     return dayOfWeek >= 1 && dayOfWeek <= 5; // 1 = Monday, 5 = Friday
   });
-  
+
   if (weekdayEntries.length === 0) return 0;
   const totalTrades = weekdayEntries.reduce((sum, e) => sum + e.numberOfTrades, 0);
   return totalTrades / weekdayEntries.length;
@@ -251,36 +260,38 @@ export const calculateAverageTradesPerDay = (entries: DayEntry[]): number => {
 
 export const calculateMonthlyPL = (entries: DayEntry[], month: Date): number => {
   const monthEntries = entries.filter(entry => {
-    const entryDate = new Date(entry.id);
-    return entryDate.getMonth() === month.getMonth() && 
-           entryDate.getFullYear() === month.getFullYear();
+    // Parse date string directly to avoid timezone issues
+    // entry.id format is "YYYY-MM-DD"
+    const [year, monthStr] = entry.id.split('-').map(Number);
+    return monthStr === month.getMonth() + 1 &&
+           year === month.getFullYear();
   });
   return monthEntries.reduce((sum, entry) => sum + entry.totalPL, 0);
 };
 
 export const calculateWeeklyPL = (entries: DayEntry[]): number => {
   if (entries.length === 0) return 0;
-  
+
   // Get the most recent entry date
   const sortedEntries = [...entries].sort((a, b) => b.id.localeCompare(a.id));
-  const mostRecentDate = new Date(sortedEntries[0].id);
-  
+  const mostRecentDate = parseDateString(sortedEntries[0].id);
+
   // Calculate start of the week (Sunday) for the most recent entry
   const startOfWeek = new Date(mostRecentDate);
   startOfWeek.setDate(mostRecentDate.getDate() - mostRecentDate.getDay());
   startOfWeek.setHours(0, 0, 0, 0);
-  
+
   // Calculate end of week (Saturday)
   const endOfWeek = new Date(startOfWeek);
   endOfWeek.setDate(startOfWeek.getDate() + 6);
   endOfWeek.setHours(23, 59, 59, 999);
-  
+
   // Filter entries for this week
   const weekEntries = entries.filter(entry => {
-    const entryDate = new Date(entry.id);
+    const entryDate = parseDateString(entry.id);
     return entryDate >= startOfWeek && entryDate <= endOfWeek;
   });
-  
+
   return weekEntries.reduce((sum, entry) => sum + entry.totalPL, 0);
 };
 
@@ -288,9 +299,9 @@ export const getMostRecentMonthWithData = (entries: DayEntry[]): Date => {
   if (entries.length === 0) {
     return new Date(); // Current month if no data
   }
-  
+
   const sortedEntries = [...entries].sort((a, b) => b.id.localeCompare(a.id));
-  const mostRecentDate = new Date(sortedEntries[0].id);
+  const mostRecentDate = parseDateString(sortedEntries[0].id);
   return new Date(mostRecentDate.getFullYear(), mostRecentDate.getMonth(), 1);
 };
 
@@ -301,9 +312,11 @@ export const getTotalFallingKnives = (entries: DayEntry[]): number => {
 
 export const getMonthlyFallingKnives = (entries: DayEntry[], month: Date): number => {
   const monthEntries = entries.filter(entry => {
-    const entryDate = new Date(entry.id);
-    return entryDate.getMonth() === month.getMonth() && 
-           entryDate.getFullYear() === month.getFullYear();
+    // Parse date string directly to avoid timezone issues
+    // entry.id format is "YYYY-MM-DD"
+    const [year, monthStr] = entry.id.split('-').map(Number);
+    return monthStr === month.getMonth() + 1 &&
+           year === month.getFullYear();
   });
   return monthEntries.reduce((sum, entry) => sum + (entry.fallingKnives || 0), 0);
 };
