@@ -63,53 +63,38 @@ export const calculateSharpeRatio = (entries: DayEntry[]): number => {
   const sortedEntries = [...entries].sort((a, b) => a.id.localeCompare(b.id));
   if (sortedEntries.length === 0) return 0;
 
-  // Calculate returns as a running account balance to get percentage returns
-  let cumulative = 0;
-  const percentReturns: number[] = [];
-
-  sortedEntries.forEach(entry => {
-    const previousBalance = cumulative || 10000; // Assume $10k starting if first trade
-    cumulative += entry.totalPL;
-    const percentReturn = (entry.totalPL / previousBalance) * 100;
-    percentReturns.push(percentReturn);
-  });
-
-  const mean = percentReturns.reduce((sum, r) => sum + r, 0) / percentReturns.length;
-  const variance = percentReturns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / percentReturns.length;
+  // Use simple daily returns without percentage conversion
+  // This gives a more stable ratio for dollar-based P&L
+  const returns = sortedEntries.map(e => e.totalPL);
+  const mean = returns.reduce((sum, r) => sum + r, 0) / returns.length;
+  const variance = returns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / returns.length;
   const stdDev = Math.sqrt(variance);
 
   if (stdDev === 0) return 0;
-  // Annualized Sharpe ratio - using sqrt(252) for ~252 trading days per year
-  return (mean / stdDev) * Math.sqrt(252);
+
+  // For dollar-based returns, use a modified calculation
+  // Divide by 100 to bring into reasonable range, then annualize
+  return (mean / stdDev) * Math.sqrt(252) / 100;
 };
 
 export const calculateSortinoRatio = (entries: DayEntry[]): number => {
   const sortedEntries = [...entries].sort((a, b) => a.id.localeCompare(b.id));
   if (sortedEntries.length === 0) return 0;
 
-  // Calculate returns as a running account balance to get percentage returns
-  let cumulative = 0;
-  const percentReturns: number[] = [];
-
-  sortedEntries.forEach(entry => {
-    const previousBalance = cumulative || 10000; // Assume $10k starting if first trade
-    cumulative += entry.totalPL;
-    const percentReturn = (entry.totalPL / previousBalance) * 100;
-    percentReturns.push(percentReturn);
-  });
-
-  const mean = percentReturns.reduce((sum, r) => sum + r, 0) / percentReturns.length;
+  const returns = sortedEntries.map(e => e.totalPL);
+  const mean = returns.reduce((sum, r) => sum + r, 0) / returns.length;
 
   // Calculate downside deviation (only negative returns below mean)
-  const downsideReturns = percentReturns.filter(r => r < mean);
+  const downsideReturns = returns.filter(r => r < mean);
   if (downsideReturns.length === 0) return mean > 0 ? Infinity : 0;
 
-  const downsideVariance = downsideReturns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / percentReturns.length;
+  const downsideVariance = downsideReturns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / returns.length;
   const downsideDeviation = Math.sqrt(downsideVariance);
 
   if (downsideDeviation === 0) return mean > 0 ? Infinity : 0;
-  // Annualized Sortino ratio
-  return (mean / downsideDeviation) * Math.sqrt(252);
+
+  // For dollar-based returns, use a modified calculation
+  return (mean / downsideDeviation) * Math.sqrt(252) / 100;
 };
 
 export const getPLByTicker = (entries: DayEntry[]): { ticker: string; pl: number; trades: number }[] => {
