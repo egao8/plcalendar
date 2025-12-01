@@ -63,8 +63,6 @@ export const calculateSharpeRatio = (entries: DayEntry[]): number => {
   const sortedEntries = [...entries].sort((a, b) => a.id.localeCompare(b.id));
   if (sortedEntries.length === 0) return 0;
 
-  // Use simple daily returns without percentage conversion
-  // This gives a more stable ratio for dollar-based P&L
   const returns = sortedEntries.map(e => e.totalPL);
   const mean = returns.reduce((sum, r) => sum + r, 0) / returns.length;
   const variance = returns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / returns.length;
@@ -72,9 +70,8 @@ export const calculateSharpeRatio = (entries: DayEntry[]): number => {
 
   if (stdDev === 0) return 0;
 
-  // For dollar-based returns, use a modified calculation
-  // Divide by 100 to bring into reasonable range, then annualize
-  return (mean / stdDev) * Math.sqrt(252) / 100;
+  // Standard Sharpe calculation with annualization
+  return (mean / stdDev) * Math.sqrt(252);
 };
 
 export const calculateSortinoRatio = (entries: DayEntry[]): number => {
@@ -93,8 +90,8 @@ export const calculateSortinoRatio = (entries: DayEntry[]): number => {
 
   if (downsideDeviation === 0) return mean > 0 ? Infinity : 0;
 
-  // For dollar-based returns, use a modified calculation
-  return (mean / downsideDeviation) * Math.sqrt(252) / 100;
+  // Standard Sortino calculation with annualization
+  return (mean / downsideDeviation) * Math.sqrt(252);
 };
 
 export const getPLByTicker = (entries: DayEntry[]): { ticker: string; pl: number; trades: number }[] => {
