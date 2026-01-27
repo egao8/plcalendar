@@ -17,6 +17,7 @@ export interface UserSettings {
   password: string;
   netWorth: number;
   startingBalance: number;
+  monthlyCapital?: Record<string, number>; // key: YYYY-MM
 }
 
 export type PLStatus = 'profit' | 'loss' | 'neutral';

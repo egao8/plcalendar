@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { TrendingUp, TrendingDown, DollarSign, Settings, Calendar as CalendarIcon } from 'lucide-react';
 import { DayEntry, UserSettings } from '../types';
-import { 
-  calculateMonthlyPL, 
-  calculateWeeklyPL, 
+import {
+  calculateMonthlyPL,
+  calculateWeeklyPL,
   getTotalFallingKnives,
   getMonthlyFallingKnives,
-  formatCurrency 
+
+  formatCurrency,
+  formatPercent
 } from '../utils/calculations';
 import { format } from 'date-fns';
 
@@ -28,14 +30,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
   currentView
 }) => {
   const [isEditingMonthlyPL, setIsEditingMonthlyPL] = useState(false);
-  const [monthlyAdjustment, setMonthlyAdjustment] = useState('0');
 
+  const [monthlyAdjustment, setMonthlyAdjustment] = useState('0');
+  const [isEditingCapital, setIsEditingCapital] = useState(false);
+  const [capitalInput, setCapitalInput] = useState('0');
+
+  const currentMonthKey = format(currentMonth, 'yyyy-MM');
+  const monthlyCapital = settings.monthlyCapital?.[currentMonthKey] || 0;
   const calculatedMonthlyPL = calculateMonthlyPL(entries, currentMonth);
   const monthlyManualAdjustment = settings.startingBalance || 0;
   const monthlyPL = calculatedMonthlyPL + monthlyManualAdjustment;
-  
+
+  const monthlyProfitPercent = monthlyCapital !== 0 ? (monthlyPL / monthlyCapital) * 100 : 0;
+
   const weeklyPL = calculateWeeklyPL(entries);
-  
+
   const totalFK = getTotalFallingKnives(entries);
   const monthlyFK = getMonthlyFallingKnives(entries, currentMonth);
 
@@ -47,40 +56,51 @@ export const Sidebar: React.FC<SidebarProps> = ({
     setIsEditingMonthlyPL(false);
   };
 
+  const handleSaveCapital = () => {
+    const capital = parseFloat(capitalInput);
+    if (!isNaN(capital)) {
+      onUpdateSettings({
+        ...settings,
+        monthlyCapital: {
+          ...(settings.monthlyCapital || {}),
+          [currentMonthKey]: capital
+        }
+      });
+    }
+    setIsEditingCapital(false);
+  };
+
   return (
     <div className="bg-quant-card border border-quant-border p-4 space-y-4">
       {/* Navigation */}
       <div className="flex border-b border-quant-border">
         <button
           onClick={() => currentView === 'analytics' && onNavigateToAnalytics()}
-          className={`flex-1 py-2 px-4 text-xs font-medium transition-colors ${
-            currentView === 'calendar'
-              ? 'text-white border-b-2 border-quant-accent'
-              : 'text-slate-400 hover:text-white'
-          }`}
+          className={`flex-1 py-2 px-4 text-xs font-medium transition-colors ${currentView === 'calendar'
+            ? 'text-white border-b-2 border-quant-accent'
+            : 'text-slate-400 hover:text-white'
+            }`}
         >
           CALENDAR
         </button>
         <button
           onClick={onNavigateToAnalytics}
-          className={`flex-1 py-2 px-4 text-xs font-medium transition-colors ${
-            currentView === 'analytics'
-              ? 'text-white border-b-2 border-quant-accent'
-              : 'text-slate-400 hover:text-white'
-          }`}
+          className={`flex-1 py-2 px-4 text-xs font-medium transition-colors ${currentView === 'analytics'
+            ? 'text-white border-b-2 border-quant-accent'
+            : 'text-slate-400 hover:text-white'
+            }`}
         >
           ANALYTICS
         </button>
       </div>
 
       {/* Monthly P&L */}
-      <div className={`p-4 border-l-2 bg-quant-surface ${
-        monthlyPL > 0
-          ? 'border-l-emerald-500'
-          : monthlyPL < 0
+      <div className={`p-4 border-l-2 bg-quant-surface ${monthlyPL > 0
+        ? 'border-l-emerald-500'
+        : monthlyPL < 0
           ? 'border-l-red-500'
           : 'border-l-quant-border'
-      }`}>
+        }`}>
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             {monthlyPL > 0 ? (
@@ -105,7 +125,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <Settings className="w-4 h-4" />
           </button>
         </div>
-        
+
         {isEditingMonthlyPL ? (
           <div className="space-y-2">
             <div className="text-sm text-slate-400">
@@ -133,17 +153,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           </div>
         ) : (
-          <div className={`text-3xl font-bold ${
-            monthlyPL > 0
-              ? 'text-green-400'
-              : monthlyPL < 0
+          <div className={`text-3xl font-bold ${monthlyPL > 0
+            ? 'text-green-400'
+            : monthlyPL < 0
               ? 'text-red-400'
               : 'text-slate-300'
-          }`}>
+            }`}>
             {formatCurrency(monthlyPL)}
           </div>
         )}
-        
+
         {monthlyManualAdjustment !== 0 && !isEditingMonthlyPL && (
           <div className="text-xs text-slate-500 mt-1">
             (incl. {formatCurrency(monthlyManualAdjustment)} adjustment)
@@ -151,14 +170,87 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
       </div>
 
-      {/* Weekly P&L (Most Recent Week) */}
-      <div className={`p-4 border-l-2 bg-quant-surface ${
-        weeklyPL > 0
-          ? 'border-l-emerald-500'
-          : weeklyPL < 0
+      {/* Monthly Profit % & Capital */}
+      <div className={`p-4 border-l-2 bg-quant-surface ${monthlyProfitPercent > 0
+        ? 'border-l-emerald-500'
+        : monthlyProfitPercent < 0
           ? 'border-l-red-500'
           : 'border-l-quant-border'
-      }`}>
+        }`}>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            {monthlyProfitPercent > 0 ? (
+              <TrendingUp className="w-5 h-5 text-green-400" />
+            ) : monthlyProfitPercent < 0 ? (
+              <TrendingDown className="w-5 h-5 text-red-400" />
+            ) : (
+              <DollarSign className="w-5 h-5 text-slate-400" />
+            )}
+            <h3 className="text-sm font-medium text-slate-400">
+              Monthly Return %
+            </h3>
+          </div>
+          <button
+            onClick={() => {
+              setIsEditingCapital(!isEditingCapital);
+              if (!isEditingCapital) setCapitalInput(monthlyCapital.toString());
+            }}
+            className="text-slate-400 hover:text-white transition-colors"
+            title="Set Monthly Capital"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
+        </div>
+
+        {isEditingCapital ? (
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <input
+                type="number"
+                step="100"
+                value={capitalInput}
+                onChange={(e) => setCapitalInput(e.target.value)}
+                className="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-lg font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Monthly Capital"
+                autoFocus
+              />
+              <button
+                onClick={handleSaveCapital}
+                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
+              >
+                Save
+              </button>
+            </div>
+            <div className="text-xs text-slate-500">
+              Set capital deployed for {format(currentMonth, 'MMMM')}
+            </div>
+          </div>
+        ) : (
+          <div>
+            <div className={`text-3xl font-bold ${monthlyProfitPercent > 0
+              ? 'text-green-400'
+              : monthlyProfitPercent < 0
+                ? 'text-red-400'
+                : 'text-slate-300'
+              }`}>
+              {formatPercent(monthlyProfitPercent)}
+            </div>
+            {monthlyCapital > 0 && (
+              <div className="text-xs text-slate-500 mt-1">
+                Based on {formatCurrency(monthlyCapital)} capital
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Weekly P&L (Most Recent Week) */}
+      <div className={`p-4 border-l-2 bg-quant-surface ${weeklyPL > 0
+        ? 'border-l-emerald-500'
+        : weeklyPL < 0
+          ? 'border-l-red-500'
+          : 'border-l-quant-border'
+        }`}>
         <div className="flex items-center gap-2 mb-2">
           {weeklyPL > 0 ? (
             <TrendingUp className="w-5 h-5 text-green-400" />
@@ -169,17 +261,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
           <h3 className="text-sm font-medium text-slate-400">This Week P&L</h3>
         </div>
-        
-        <div className={`text-3xl font-bold ${
-          weeklyPL > 0
-            ? 'text-green-400'
-            : weeklyPL < 0
+
+        <div className={`text-3xl font-bold ${weeklyPL > 0
+          ? 'text-green-400'
+          : weeklyPL < 0
             ? 'text-red-400'
             : 'text-slate-300'
-        }`}>
+          }`}>
           {formatCurrency(weeklyPL)}
         </div>
-        
+
         <div className="text-xs text-slate-500 mt-1">
           Most recent week (Sun-Sat)
         </div>
@@ -190,7 +281,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <h3 className="text-xs font-bold text-quant-accent uppercase tracking-widest border-b border-quant-border pb-2">
           Performance Metrics
         </h3>
-        
+
         <div className="bg-quant-surface/50 rounded-lg p-4 border border-quant-border/50">
           <div className="text-sm text-slate-400 mb-1">Total Trading Days</div>
           <div className="text-2xl font-bold text-white">
