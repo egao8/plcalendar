@@ -91,7 +91,7 @@ function App() {
                 onMonthChange={setCurrentMonth}
               />
             ) : (
-              <Analytics entries={entries} />
+              <Analytics entries={entries} settings={settings} onUpdateSettings={handleUpdateSettings} />
             )}
           </div>
         </div>

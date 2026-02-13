@@ -18,6 +18,7 @@ export interface UserSettings {
   netWorth: number;
   startingBalance: number;
   monthlyCapital?: Record<string, number>; // key: YYYY-MM
+  maxDrawdownOverride?: number; // Manual max drawdown in dollars (unrealized)
 }
 
 export type PLStatus = 'profit' | 'loss' | 'neutral';

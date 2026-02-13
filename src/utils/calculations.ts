@@ -42,9 +42,12 @@ export const calculateMaxDrawdown = (entries: DayEntry[]): number => {
     if (cumulative > peak) {
       peak = cumulative;
     }
-    const drawdown = ((peak - cumulative) / (peak || 1)) * 100;
-    if (drawdown > maxDrawdown) {
-      maxDrawdown = drawdown;
+    // Only calculate drawdown when peak is meaningfully positive
+    if (peak > 0) {
+      const drawdown = ((peak - cumulative) / peak) * 100;
+      if (drawdown > maxDrawdown) {
+        maxDrawdown = drawdown;
+      }
     }
   });
 
@@ -54,43 +57,49 @@ export const calculateMaxDrawdown = (entries: DayEntry[]): number => {
 export const calculateProfitFactor = (entries: DayEntry[]): number => {
   const profits = entries.filter(e => e.totalPL > 0).reduce((sum, e) => sum + e.totalPL, 0);
   const losses = Math.abs(entries.filter(e => e.totalPL < 0).reduce((sum, e) => sum + e.totalPL, 0));
-  
+
   if (losses === 0) return profits > 0 ? Infinity : 0;
   return profits / losses;
 };
 
 export const calculateSharpeRatio = (entries: DayEntry[]): number => {
-  const sortedEntries = [...entries].sort((a, b) => a.id.localeCompare(b.id));
-  if (sortedEntries.length === 0) return 0;
+  // Only consider days with actual trading activity
+  const tradingDays = [...entries].filter(e => e.totalPL !== 0).sort((a, b) => a.id.localeCompare(b.id));
+  if (tradingDays.length < 2) return 0;
 
-  const returns = sortedEntries.map(e => e.totalPL);
+  const returns = tradingDays.map(e => e.totalPL);
   const mean = returns.reduce((sum, r) => sum + r, 0) / returns.length;
-  const variance = returns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / returns.length;
+  const variance = returns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / (returns.length - 1);
   const stdDev = Math.sqrt(variance);
 
   if (stdDev === 0) return 0;
 
-  // Standard Sharpe calculation with annualization
+  // Annualized Sharpe: (mean daily return / daily std dev) * sqrt(trading days per year)
   return (mean / stdDev) * Math.sqrt(252);
 };
 
 export const calculateSortinoRatio = (entries: DayEntry[]): number => {
-  const sortedEntries = [...entries].sort((a, b) => a.id.localeCompare(b.id));
-  if (sortedEntries.length === 0) return 0;
+  // Only consider days with actual trading activity
+  const tradingDays = [...entries].filter(e => e.totalPL !== 0).sort((a, b) => a.id.localeCompare(b.id));
+  if (tradingDays.length < 2) return 0;
 
-  const returns = sortedEntries.map(e => e.totalPL);
+  const returns = tradingDays.map(e => e.totalPL);
   const mean = returns.reduce((sum, r) => sum + r, 0) / returns.length;
+  const target = 0; // Risk-free target return
 
-  // Calculate downside deviation (only negative returns below mean)
-  const downsideReturns = returns.filter(r => r < mean);
-  if (downsideReturns.length === 0) return mean > 0 ? Infinity : 0;
+  // Downside deviation: squared differences of returns below target, divided by total count
+  const downsideSquaredSum = returns.reduce((sum, r) => {
+    if (r < target) {
+      return sum + Math.pow(r - target, 2);
+    }
+    return sum;
+  }, 0);
 
-  const downsideVariance = downsideReturns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / returns.length;
-  const downsideDeviation = Math.sqrt(downsideVariance);
+  const downsideDeviation = Math.sqrt(downsideSquaredSum / (returns.length - 1));
 
   if (downsideDeviation === 0) return mean > 0 ? Infinity : 0;
 
-  // Standard Sortino calculation with annualization
+  // Annualized Sortino: (mean daily return / downside deviation) * sqrt(trading days per year)
   return (mean / downsideDeviation) * Math.sqrt(252);
 };
 
@@ -156,51 +165,51 @@ export const formatPercent = (value: number): string => {
 export const calculateExpectancy = (entries: DayEntry[]): number => {
   const tradingDays = entries.filter(e => e.totalPL !== 0);
   if (tradingDays.length === 0) return 0;
-  
+
   const wins = tradingDays.filter(e => e.totalPL > 0);
   const losses = tradingDays.filter(e => e.totalPL < 0);
-  
+
   const avgWin = wins.length > 0 ? wins.reduce((sum, e) => sum + e.totalPL, 0) / wins.length : 0;
   const avgLoss = losses.length > 0 ? Math.abs(losses.reduce((sum, e) => sum + e.totalPL, 0) / losses.length) : 0;
-  
+
   const winRate = (wins.length / tradingDays.length);
   const lossRate = (losses.length / tradingDays.length);
-  
+
   return (avgWin * winRate) - (avgLoss * lossRate);
 };
 
 export const calculateAvgWinLossRatio = (entries: DayEntry[]): number => {
   const wins = entries.filter(e => e.totalPL > 0);
   const losses = entries.filter(e => e.totalPL < 0);
-  
+
   const avgWin = wins.length > 0 ? wins.reduce((sum, e) => sum + e.totalPL, 0) / wins.length : 0;
   const avgLoss = losses.length > 0 ? Math.abs(losses.reduce((sum, e) => sum + e.totalPL, 0) / losses.length) : 0;
-  
+
   if (avgLoss === 0) return avgWin > 0 ? Infinity : 0;
   return avgWin / avgLoss;
 };
 
 export const getLargestWinLoss = (entries: DayEntry[]): { largestWin: number; largestLoss: number } => {
   if (entries.length === 0) return { largestWin: 0, largestLoss: 0 };
-  
+
   const wins = entries.filter(e => e.totalPL > 0);
   const losses = entries.filter(e => e.totalPL < 0);
-  
+
   const largestWin = wins.length > 0 ? Math.max(...wins.map(e => e.totalPL)) : 0;
   const largestLoss = losses.length > 0 ? Math.min(...losses.map(e => e.totalPL)) : 0;
-  
+
   return { largestWin, largestLoss };
 };
 
 export const getWinLossStreaks = (entries: DayEntry[]): { currentStreak: number; longestWinStreak: number; longestLossStreak: number } => {
   const sortedEntries = [...entries].sort((a, b) => a.id.localeCompare(b.id)).filter(e => e.totalPL !== 0);
-  
+
   let currentStreak = 0;
   let longestWinStreak = 0;
   let longestLossStreak = 0;
   let tempWinStreak = 0;
   let tempLossStreak = 0;
-  
+
   sortedEntries.forEach((entry, index) => {
     if (entry.totalPL > 0) {
       tempWinStreak++;
@@ -214,13 +223,13 @@ export const getWinLossStreaks = (entries: DayEntry[]): { currentStreak: number;
       if (index === sortedEntries.length - 1) currentStreak = -tempLossStreak;
     }
   });
-  
+
   return { currentStreak, longestWinStreak, longestLossStreak };
 };
 
 export const getPLByTag = (entries: DayEntry[]): { tag: string; pl: number; count: number }[] => {
   const tagMap = new Map<string, { pl: number; count: number }>();
-  
+
   entries.forEach(entry => {
     entry.tags.forEach(tag => {
       const current = tagMap.get(tag) || { pl: 0, count: 0 };
@@ -230,7 +239,7 @@ export const getPLByTag = (entries: DayEntry[]): { tag: string; pl: number; coun
       });
     });
   });
-  
+
   return Array.from(tagMap.entries())
     .map(([tag, data]) => ({ tag, ...data }))
     .sort((a, b) => b.pl - a.pl);
@@ -239,7 +248,7 @@ export const getPLByTag = (entries: DayEntry[]): { tag: string; pl: number; coun
 export const calculateRecoveryFactor = (entries: DayEntry[]): number => {
   const netProfit = calculateCumulativePL(entries);
   const maxDrawdownPercent = calculateMaxDrawdown(entries);
-  
+
   if (maxDrawdownPercent === 0) return netProfit > 0 ? Infinity : 0;
   return netProfit / maxDrawdownPercent;
 };
@@ -265,7 +274,7 @@ export const calculateMonthlyPL = (entries: DayEntry[], month: Date): number => 
     // entry.id format is "YYYY-MM-DD"
     const [year, monthStr] = entry.id.split('-').map(Number);
     return monthStr === month.getMonth() + 1 &&
-           year === month.getFullYear();
+      year === month.getFullYear();
   });
   return monthEntries.reduce((sum, entry) => sum + entry.totalPL, 0);
 };
@@ -317,7 +326,7 @@ export const getMonthlyFallingKnives = (entries: DayEntry[], month: Date): numbe
     // entry.id format is "YYYY-MM-DD"
     const [year, monthStr] = entry.id.split('-').map(Number);
     return monthStr === month.getMonth() + 1 &&
-           year === month.getFullYear();
+      year === month.getFullYear();
   });
   return monthEntries.reduce((sum, entry) => sum + (entry.fallingKnives || 0), 0);
 };
@@ -498,25 +507,257 @@ export const calculateRiskMetrics = (entries: DayEntry[]): {
   valueAtRisk95: number;
   valueAtRisk99: number;
   conditionalVaR95: number;
+  conditionalVaR975: number;
+  worstRealizedLoss: number;
 } => {
   const sorted = [...entries].sort((a, b) => a.totalPL - b.totalPL);
 
   const index95 = Math.floor(sorted.length * 0.05);
   const index99 = Math.floor(sorted.length * 0.01);
+  const index975 = Math.floor(sorted.length * 0.025);
 
   const valueAtRisk95 = sorted[index95]?.totalPL || 0;
   const valueAtRisk99 = sorted[index99]?.totalPL || 0;
 
-  // Conditional VaR (expected loss beyond VaR)
-  const tailLosses = sorted.slice(0, index95);
-  const conditionalVaR95 = tailLosses.length > 0
-    ? tailLosses.reduce((sum, e) => sum + e.totalPL, 0) / tailLosses.length
+  // Conditional VaR (expected loss beyond VaR) at 95%
+  const tailLosses95 = sorted.slice(0, index95);
+  const conditionalVaR95 = tailLosses95.length > 0
+    ? tailLosses95.reduce((sum, e) => sum + e.totalPL, 0) / tailLosses95.length
     : 0;
+
+  // Conditional VaR at 97.5%
+  const tailLosses975 = sorted.slice(0, index975);
+  const conditionalVaR975 = tailLosses975.length > 0
+    ? tailLosses975.reduce((sum, e) => sum + e.totalPL, 0) / tailLosses975.length
+    : 0;
+
+  // Worst realized loss (absolute minimum P&L)
+  const worstRealizedLoss = sorted.length > 0 ? sorted[0].totalPL : 0;
 
   return {
     valueAtRisk95,
     valueAtRisk99,
-    conditionalVaR95
+    conditionalVaR95,
+    conditionalVaR975,
+    worstRealizedLoss
   };
 };
 
+// === TAIL RISK (NON-GAUSSIAN) METRICS ===
+
+// Sample Skewness — measures asymmetry of the return distribution
+// Positive skew = more extreme positive returns, Negative = more extreme losses
+export const calculateSkewness = (entries: DayEntry[]): number => {
+  const returns = entries.filter(e => e.totalPL !== 0).map(e => e.totalPL);
+  const n = returns.length;
+  if (n < 3) return 0;
+
+  const mean = returns.reduce((sum, r) => sum + r, 0) / n;
+  const stdDev = Math.sqrt(returns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / (n - 1));
+  if (stdDev === 0) return 0;
+
+  // Sample skewness with bias correction: [n/((n-1)(n-2))] * Σ((xi - mean)/σ)³
+  const m3 = returns.reduce((sum, r) => sum + Math.pow((r - mean) / stdDev, 3), 0);
+  return (n / ((n - 1) * (n - 2))) * m3;
+};
+
+// Excess Kurtosis — measures tail heaviness relative to normal distribution
+// Positive = fat tails (more extreme events), 0 = normal, Negative = thin tails
+export const calculateExcessKurtosis = (entries: DayEntry[]): number => {
+  const returns = entries.filter(e => e.totalPL !== 0).map(e => e.totalPL);
+  const n = returns.length;
+  if (n < 4) return 0;
+
+  const mean = returns.reduce((sum, r) => sum + r, 0) / n;
+  const stdDev = Math.sqrt(returns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / (n - 1));
+  if (stdDev === 0) return 0;
+
+  // Sample excess kurtosis with bias correction
+  const m4 = returns.reduce((sum, r) => sum + Math.pow((r - mean) / stdDev, 4), 0);
+  const kurtosis = (n * (n + 1)) / ((n - 1) * (n - 2) * (n - 3)) * m4;
+  const correction = (3 * Math.pow(n - 1, 2)) / ((n - 2) * (n - 3));
+  return kurtosis - correction;
+};
+
+// Cornish-Fisher VaR — adjusts normal VaR for skewness and kurtosis
+// More accurate than Gaussian VaR when returns are non-normal
+export const calculateCornishFisherVaR = (entries: DayEntry[], confidence: number = 0.95): number => {
+  const returns = entries.filter(e => e.totalPL !== 0).map(e => e.totalPL);
+  const n = returns.length;
+  if (n < 4) return 0;
+
+  const mean = returns.reduce((sum, r) => sum + r, 0) / n;
+  const stdDev = Math.sqrt(returns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / (n - 1));
+  if (stdDev === 0) return 0;
+
+  const skew = calculateSkewness(entries);
+  const kurt = calculateExcessKurtosis(entries);
+
+  // Standard normal quantile for the confidence level (e.g., -1.645 for 95%)
+  // Using rational approximation for inverse normal CDF
+  const p = 1 - confidence;
+  const t = Math.sqrt(-2 * Math.log(p));
+  const z_normal = -(t - (2.515517 + 0.802853 * t + 0.010328 * t * t) /
+    (1 + 1.432788 * t + 0.189269 * t * t + 0.001308 * t * t * t));
+
+  // Cornish-Fisher expansion: adjust z for skew and kurtosis
+  const z_cf = z_normal
+    + (1 / 6) * (Math.pow(z_normal, 2) - 1) * skew
+    + (1 / 24) * (Math.pow(z_normal, 3) - 3 * z_normal) * kurt
+    - (1 / 36) * (2 * Math.pow(z_normal, 3) - 5 * z_normal) * Math.pow(skew, 2);
+
+  return mean + z_cf * stdDev;
+};
+
+// === ALPHA DECOMPOSITION METRICS ===
+
+// OLS Linear Regression helper: returns { alpha, beta, r2, alphaStdErr, residuals }
+export const olsRegression = (
+  portfolioReturns: number[],
+  benchmarkReturns: number[]
+): { alpha: number; beta: number; r2: number; alphaStdErr: number; residuals: number[] } => {
+  const n = portfolioReturns.length;
+  if (n < 3 || n !== benchmarkReturns.length) {
+    return { alpha: 0, beta: 0, r2: 0, alphaStdErr: 0, residuals: [] };
+  }
+
+  const meanY = portfolioReturns.reduce((s, r) => s + r, 0) / n;
+  const meanX = benchmarkReturns.reduce((s, r) => s + r, 0) / n;
+
+  let ssXX = 0, ssXY = 0, ssYY = 0;
+  for (let i = 0; i < n; i++) {
+    const dx = benchmarkReturns[i] - meanX;
+    const dy = portfolioReturns[i] - meanY;
+    ssXX += dx * dx;
+    ssXY += dx * dy;
+    ssYY += dy * dy;
+  }
+
+  if (ssXX === 0) return { alpha: 0, beta: 0, r2: 0, alphaStdErr: 0, residuals: [] };
+
+  const beta = ssXY / ssXX;
+  const alpha = meanY - beta * meanX;
+  const r2 = ssYY > 0 ? Math.pow(ssXY, 2) / (ssXX * ssYY) : 0;
+
+  // Residuals and standard error of alpha
+  const residuals = portfolioReturns.map((y, i) => y - (alpha + beta * benchmarkReturns[i]));
+  const sse = residuals.reduce((s, r) => s + r * r, 0);
+  const mse = sse / (n - 2);
+  const sumX2 = benchmarkReturns.reduce((s, x) => s + x * x, 0);
+  const alphaStdErr = Math.sqrt(mse * sumX2 / (n * ssXX));
+
+  return { alpha, beta, r2, alphaStdErr, residuals };
+};
+
+// Full Alpha Decomposition: Jensen's Alpha, Beta, Alpha t-stat, Residual Alpha
+export const calculateAlphaDecomposition = (
+  entries: DayEntry[],
+  benchmarkReturns: { date: string; return: number }[],
+  riskFreeRate: number = 0.0525 // annual, default ~5.25%
+): {
+  jensensAlpha: number;
+  annualizedAlpha: number;
+  beta: number;
+  alphaTStat: number;
+  r2: number;
+  residualAlpha: number;
+} => {
+  const dailyRf = riskFreeRate / 252;
+
+  // Align dates between portfolio and benchmark
+  const benchmarkMap = new Map(benchmarkReturns.map(b => [b.date, b.return]));
+  const sortedEntries = [...entries].sort((a, b) => a.id.localeCompare(b.id));
+
+  const aligned: { portfolioReturn: number; benchmarkReturn: number }[] = [];
+  for (const entry of sortedEntries) {
+    const bmReturn = benchmarkMap.get(entry.id);
+    if (bmReturn !== undefined) {
+      aligned.push({
+        portfolioReturn: entry.totalPL, // dollar P&L as "return"
+        benchmarkReturn: bmReturn
+      });
+    }
+  }
+
+  if (aligned.length < 10) {
+    return { jensensAlpha: 0, annualizedAlpha: 0, beta: 0, alphaTStat: 0, r2: 0, residualAlpha: 0 };
+  }
+
+  // Excess returns over risk-free rate
+  const excessPortfolio = aligned.map(a => a.portfolioReturn - dailyRf);
+  const excessBenchmark = aligned.map(a => a.benchmarkReturn - dailyRf);
+
+  const regression = olsRegression(excessPortfolio, excessBenchmark);
+
+  // Jensen's Alpha = daily alpha from regression
+  const jensensAlpha = regression.alpha;
+  const annualizedAlpha = jensensAlpha * 252;
+
+  // Alpha t-statistic = alpha / SE(alpha)
+  const alphaTStat = regression.alphaStdErr > 0 ? jensensAlpha / regression.alphaStdErr : 0;
+
+  // Residual alpha = mean of residuals (should be ~0 for a well-specified model)
+  const residualAlpha = regression.residuals.length > 0
+    ? regression.residuals.reduce((s, r) => s + r, 0) / regression.residuals.length
+    : 0;
+
+  return {
+    jensensAlpha,
+    annualizedAlpha,
+    beta: regression.beta,
+    alphaTStat,
+    r2: regression.r2,
+    residualAlpha
+  };
+};
+
+// Rolling Alpha: computes Jensen's Alpha over rolling windows
+export const calculateRollingAlpha = (
+  entries: DayEntry[],
+  benchmarkReturns: { date: string; return: number }[],
+  windowSizes: number[] = [30, 60, 90],
+  riskFreeRate: number = 0.0525
+): { date: string; alpha30d?: number; alpha60d?: number; alpha90d?: number }[] => {
+  const dailyRf = riskFreeRate / 252;
+  const benchmarkMap = new Map(benchmarkReturns.map(b => [b.date, b.return]));
+  const sortedEntries = [...entries].sort((a, b) => a.id.localeCompare(b.id));
+
+  // Build aligned series
+  const alignedSeries: { date: string; portfolioReturn: number; benchmarkReturn: number }[] = [];
+  for (const entry of sortedEntries) {
+    const bmReturn = benchmarkMap.get(entry.id);
+    if (bmReturn !== undefined) {
+      alignedSeries.push({
+        date: entry.id,
+        portfolioReturn: entry.totalPL,
+        benchmarkReturn: bmReturn
+      });
+    }
+  }
+
+  const maxWindow = Math.max(...windowSizes);
+  if (alignedSeries.length < maxWindow) return [];
+
+  const result: { date: string; alpha30d?: number; alpha60d?: number; alpha90d?: number }[] = [];
+
+  for (let i = maxWindow - 1; i < alignedSeries.length; i++) {
+    const point: { date: string; alpha30d?: number; alpha60d?: number; alpha90d?: number } = {
+      date: alignedSeries[i].date
+    };
+
+    for (const window of windowSizes) {
+      if (i >= window - 1) {
+        const slice = alignedSeries.slice(i - window + 1, i + 1);
+        const excessP = slice.map(s => s.portfolioReturn - dailyRf);
+        const excessB = slice.map(s => s.benchmarkReturn - dailyRf);
+        const reg = olsRegression(excessP, excessB);
+        const key = `alpha${window}d` as keyof typeof point;
+        (point as Record<string, number | string | undefined>)[key] = reg.alpha * 252; // annualized
+      }
+    }
+
+    result.push(point);
+  }
+
+  return result;
+};
