@@ -1,10 +1,10 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { 
-  startOfMonth, 
-  endOfMonth, 
-  eachDayOfInterval, 
-  format, 
+import {
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  format,
   isSameMonth,
   addMonths,
   subMonths,
@@ -32,7 +32,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   const monthEnd = endOfMonth(currentMonth);
   const calendarStart = startOfWeek(monthStart);
   const calendarEnd = endOfWeek(monthEnd);
-  
+
   const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -59,11 +59,11 @@ export const Calendar: React.FC<CalendarProps> = ({
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
-        
+
         <h2 className="text-base font-semibold text-white tracking-tight uppercase">
           {format(currentMonth, 'MMMM yyyy')}
         </h2>
-        
+
         <button
           onClick={() => onMonthChange(addMonths(currentMonth, 1))}
           className="p-1 hover:bg-quant-surface transition-colors text-slate-400 hover:text-white"
@@ -92,41 +92,52 @@ export const Calendar: React.FC<CalendarProps> = ({
             const entry = getEntryForDate(day);
             const isCurrentMonth = isSameMonth(day, currentMonth);
             const isToday = isSameDay(day, new Date());
+            const isSaturday = day.getDay() === 6;
+
+            let weeklyPL = 0;
+            let hasTradesThisWeek = false;
+            if (isSaturday && isCurrentMonth) {
+              const weekStartStr = format(startOfWeek(day), 'yyyy-MM-dd');
+              const weekEndStr = format(endOfWeek(day), 'yyyy-MM-dd');
+              const weekEntries = entries.filter(e => e.id >= weekStartStr && e.id <= weekEndStr);
+              hasTradesThisWeek = weekEntries.length > 0;
+              weeklyPL = weekEntries.reduce((sum, e) => sum + e.totalPL, 0);
+            }
 
             return (
               <button
                 key={day.toString()}
                 onClick={() => onDayClick(day)}
                 className={`
-                  min-h-[100px] p-2 transition-colors
+                  min-h-[100px] p-2 transition-colors relative flex flex-col
                   ${isCurrentMonth ? getDayColor(entry) : 'bg-quant-bg opacity-20 border border-quant-border'}
                   ${isToday ? 'ring-1 ring-inset ring-quant-accent' : ''}
                   ${isCurrentMonth ? 'cursor-pointer' : ''}
                 `}
               >
-                <div className="flex flex-col h-full">
-                  <div className={`text-sm font-semibold mb-2 ${
-                    isCurrentMonth ? 'text-white' : 'text-slate-500'
-                  }`}>
-                    {format(day, 'd')}
-                  </div>
-                  
-                  {entry && isCurrentMonth && (
-                    <div className="flex-1 flex flex-col justify-between">
-                      <div className={`text-lg font-mono font-bold ${
-                        entry.totalPL > 0 ? 'text-green-400' :
-                        entry.totalPL < 0 ? 'text-red-400' :
-                        'text-yellow-400'
+                <div className="flex flex-col h-full w-full">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className={`text-sm font-semibold ${isCurrentMonth ? 'text-white' : 'text-slate-500'
                       }`}>
+                      {format(day, 'd')}
+                    </div>
+                  </div>
+
+                  {entry && isCurrentMonth && (
+                    <div className="flex-1 flex flex-col justify-start">
+                      <div className={`text-lg font-mono font-bold ${entry.totalPL > 0 ? 'text-green-400' :
+                          entry.totalPL < 0 ? 'text-red-400' :
+                            'text-yellow-400'
+                        }`}>
                         {formatCurrency(entry.totalPL)}
                       </div>
-                      
+
                       {entry.numberOfTrades > 0 && (
-                        <div className="text-xs text-slate-400 mt-1">
+                        <div className="text-xs text-slate-400 mt-1 text-left">
                           {entry.numberOfTrades} trade{entry.numberOfTrades !== 1 ? 's' : ''}
                         </div>
                       )}
-                      
+
                       {entry.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-2">
                           {entry.tags.slice(0, 2).map(tag => (
@@ -144,6 +155,15 @@ export const Calendar: React.FC<CalendarProps> = ({
                           )}
                         </div>
                       )}
+                    </div>
+                  )}
+
+                  {isSaturday && isCurrentMonth && hasTradesThisWeek && (
+                    <div className={`mt-auto pt-2 mt-2 text-xs font-mono font-bold text-right border-t border-quant-border/50 ${weeklyPL > 0 ? 'text-emerald-400' :
+                        weeklyPL < 0 ? 'text-red-400' :
+                          'text-slate-500'
+                      }`}>
+                      W: {formatCurrency(weeklyPL)}
                     </div>
                   )}
                 </div>
