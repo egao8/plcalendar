@@ -18,7 +18,8 @@ export const calculateCumulativePL = (entries: DayEntry[]): number => {
 };
 
 export const calculateWinRate = (entries: DayEntry[]): number => {
-  const tradingDays = entries.filter(e => e.totalPL !== 0);
+  // Include days with either P&L or falling knives as active trading days
+  const tradingDays = entries.filter(e => e.totalPL !== 0 || (e.fallingKnives || 0) > 0);
   if (tradingDays.length === 0) return 0;
   const wins = tradingDays.filter(e => e.totalPL > 0).length;
   return (wins / tradingDays.length) * 100;
