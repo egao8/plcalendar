@@ -333,8 +333,10 @@ export const getMonthlyFallingKnives = (entries: DayEntry[], month: Date): numbe
 };
 
 export const calculateFKWinRate = (entries: DayEntry[]): number => {
-  // Win rate excluding days with falling knives
-  const nonFKDays = entries.filter(e => e.totalPL !== 0 && (e.fallingKnives || 0) === 0);
+  // First, determine all trading days (including FK-only days)
+  const allTradingDays = entries.filter(e => e.totalPL !== 0 || (e.fallingKnives || 0) > 0);
+  // Then exclude days with falling knives to get "clean" win rate
+  const nonFKDays = allTradingDays.filter(e => (e.fallingKnives || 0) === 0);
   if (nonFKDays.length === 0) return 0;
   const wins = nonFKDays.filter(e => e.totalPL > 0).length;
   return (wins / nonFKDays.length) * 100;
